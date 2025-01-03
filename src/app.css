@@ -1,0 +1,39 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@import '@fontsource/merriweather';
+@import '@fontsource/rubik';
+
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css');
+
+.light {
+	--foreground: 32, 32, 32;
+	--background: 242, 240, 227;
+
+	color: rgba(var(--foreground));
+	background: rgba(var(--background));
+}
+
+.dark {
+	--background: 32, 32, 32;
+	--foreground: 242, 240, 227;
+
+	color: rgba(var(--foreground));
+	background: rgba(var(--background));
+}
+
+.font-fancy {
+	font-family: 'Merriweather', sans-serif;
+}
+
+.font-minimal {
+	font-family: 'Rubik', sans-serif;
+}
+
+* {
+	/* Transition colors when switching theme */
+	@apply transition-colors duration-300;
+
+	/* Default font */
+	@apply font-minimal;
+}

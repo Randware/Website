@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Github, Youtube, Gitlab } from 'lucide-svelte';
 	import FooterSection from './FooterSection.svelte';
 </script>
 
@@ -17,17 +18,17 @@
 			heading="Follow us"
 			links={[
 				{
-					icon: 'fa-github',
+					icon: Github,
 					name: 'GitHub',
 					url: 'https://github.com/Randware'
 				},
 				{
-					icon: 'fa-youtube-play',
+					icon: Youtube,
 					name: 'YouTube',
 					url: 'https://youtube.com/@randware'
 				},
 				{
-					icon: 'fa-gitlab',
+					icon: Gitlab,
 					name: 'Gitlab',
 					url: 'https://gitlab.com/Randware'
 				}

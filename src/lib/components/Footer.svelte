@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import FooterSection from './FooterSection.svelte';
 </script>
 

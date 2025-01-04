@@ -47,7 +47,7 @@
 		in:slide={{ duration: 300 }}
 		out:slide={{ duration: 300 }}
 	>
-		<div class="flex flex-col items-center space-y-4 p-6 font-semibold">
+		<div class="flex flex-col items-center space-y-4 p-6 text-lg font-semibold">
 			{#each navLinks as { text, redirect }}
 				<NavbarItem {text} {redirect} />
 			{/each}

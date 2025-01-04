@@ -20,7 +20,7 @@
 				<Icon size={16} />
 			{/if}
 
-			<div class="text-lg">{link.name}</div>
+			<div class="text-lg underline">{link.name}</div>
 		</a>
 	{/each}
 </div>

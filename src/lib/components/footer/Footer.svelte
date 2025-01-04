@@ -12,7 +12,7 @@
 	</div>
 
 	<div
-		class="flex flex-1 flex-col justify-start gap-x-20 gap-y-10 text-start sm:flex-row lg:justify-evenly lg:gap-0"
+		class="flex flex-1 flex-col justify-start gap-x-16 gap-y-10 text-start sm:flex-row lg:justify-evenly lg:gap-x-0"
 	>
 		<FooterSection
 			heading="Follow us"
@@ -57,11 +57,13 @@
 			heading="Members"
 			links={[
 				{
-					name: '@Dari-OS',
+					icon: Github,
+					name: 'Dari-OS',
 					url: 'https://github.com/Dari-OS'
 				},
 				{
-					name: '@GHaxZ',
+					icon: Github,
+					name: 'GHaxZ',
 					url: 'https://github.com/GHaxZ'
 				}
 			]}

@@ -43,7 +43,7 @@
 
 {#if menuOpen}
 	<div
-		class="absolute left-16 right-16 z-10 rounded-b-3xl border-2 border-t-0 border-foreground bg-background md:hidden"
+		class="absolute left-10 right-10 z-10 rounded-b-3xl border-2 border-t-0 border-foreground bg-background md:hidden"
 		in:slide={{ duration: 300 }}
 		out:slide={{ duration: 300 }}
 	>

@@ -6,9 +6,11 @@
 	let { children } = $props();
 </script>
 
-<div class="flex h-screen flex-col">
+<div class="flex min-h-screen flex-col">
+	<!--  TODO: Fix weird bug with navbar getting stuck on footer -->
+
 	<!-- Add margins for Navbar -->
-	<header class="mx-6 mt-6">
+	<header class="sticky top-6 z-50 mx-6 mt-6">
 		<Navbar />
 	</header>
 

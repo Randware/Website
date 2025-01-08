@@ -4,8 +4,6 @@
 @import '@fontsource/merriweather';
 @import '@fontsource/rubik';
 
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css');
-
 .light {
 	--foreground: 32, 32, 32;
 	--background: 242, 240, 227;

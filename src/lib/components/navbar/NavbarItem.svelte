@@ -11,7 +11,7 @@
 
 <a
 	href={redirect}
-	class={currentPath() === redirect
+	class="{currentPath() === redirect
 		? 'text-foreground'
-		: 'text-foreground/80 hover:text-foreground'}>{text}</a
+		: 'text-foreground/80 hover:text-foreground'} transition-colors">{text}</a
 >

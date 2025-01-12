@@ -4,6 +4,11 @@
 @import '@fontsource/merriweather';
 @import '@fontsource/rubik';
 
+:root {
+	--transition-duration: theme(transitionDuration.DEFAULT);
+	--transition-animation: theme(transitionTimingFunction.DEFAULT);
+}
+
 .light {
 	--foreground: 32, 32, 32;
 	--background: 242, 240, 227;
@@ -29,9 +34,11 @@
 }
 
 * {
-	/* Transition colors when switching theme */
-	@apply transition-colors duration-300;
+	transition: background-color var(--transition-duration) var(--transition-animation);
 
-	/* Default font */
 	@apply font-minimal;
+}
+
+:is(.light, .dark) {
+	transition-property: background-color, color, border;
 }

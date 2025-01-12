@@ -12,7 +12,7 @@
 	onclick={toggle}
 	class="group relative overflow-hidden overflow-x-hidden rounded-full border-2 border-foreground text-foreground hover:text-background"
 >
-	<span class="relative z-10 flex h-full w-full items-center justify-center p-3">
+	<span class="relative z-10 flex h-full w-full items-center justify-center p-3 transition-colors">
 		{#if $theme === 'dark'}
 			<Sun size={26} />
 		{:else}
@@ -21,7 +21,7 @@
 	</span>
 	<span class="absolute inset-0 overflow-hidden rounded-full">
 		<span
-			class="absolute left-0 aspect-square w-full origin-center -translate-x-full rounded-full bg-foreground transition-all duration-300 group-hover:-translate-x-0 group-hover:scale-150"
+			class="absolute left-0 aspect-square w-full origin-center -translate-x-full rounded-full bg-foreground transition-transform group-hover:-translate-x-0 group-hover:scale-150"
 		></span>
 	</span>
 </button>

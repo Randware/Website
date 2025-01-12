@@ -1,8 +1,8 @@
 <script lang="ts">
 	import TopicItem from '$lib/components/TopicItem.svelte';
-	import openSourceLogo from '$lib/assets/img/open-source-logo.webp';
-	import securityLogo from '$lib/assets/img/security-logo.png';
-	import performanceLogo from '$lib/assets/img/performance-logo.png';
+	import openSourceLogo from '$lib/assets/images/open-source-logo.webp';
+	import securityLogo from '$lib/assets/images/security-logo.png';
+	import performanceLogo from '$lib/assets/images/performance-logo.png';
 </script>
 
 <div class="space-y-32">

@@ -12,7 +12,13 @@ export default {
       colors: {
         background: 'rgba(var(--background))',
         foreground: 'rgba(var(--foreground))'
-      }
+      },
+      transitionDuration: {
+        DEFAULT: '300ms',
+      },
+      transitionTimingFunction: {
+        DEFAULT: 'ease-in-out',
+      },
     }
   },
 

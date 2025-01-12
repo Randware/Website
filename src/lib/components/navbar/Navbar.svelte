@@ -1,11 +1,12 @@
 <script lang="ts">
 	import NavbarItem from './NavbarItem.svelte';
-	import RandwareLogo from '$lib/components/RandwareLogo.svelte';
+	import RandwareLogo from '$lib/assets/icons/RandwareLogo.svelte';
 	import ThemeSwitcher from '$lib/components/ThemeSwitcher.svelte';
 	import NavbarMenuButton from './NavbarMenuButton.svelte';
 
 	import { afterNavigate } from '$app/navigation';
 	import { slide } from 'svelte/transition';
+	import { transitionDuration } from '$lib/store/settings';
 
 	let menuOpen: boolean = false;
 
@@ -21,10 +22,10 @@
 </script>
 
 <nav
-	class="z-20 flex items-center justify-between rounded-full border-2 border-foreground bg-background p-3 text-foreground"
+	class="z-20 flex items-center justify-between rounded-full border-2 border-foreground bg-background p-3 text-foreground transition-colors"
 >
-	<a href="/" class="ms-2 h-14 w-14">
-		<RandwareLogo />
+	<a href="/" class="ms-4">
+		<RandwareLogo size={56} />
 	</a>
 
 	<div class="hidden items-center justify-center space-x-6 text-lg font-semibold md:flex">
@@ -43,9 +44,13 @@
 
 {#if menuOpen}
 	<div
-		class="absolute left-10 right-10 z-10 rounded-b-3xl border-2 border-t-0 border-foreground bg-background md:hidden"
-		in:slide={{ duration: 300 }}
-		out:slide={{ duration: 300 }}
+		class="absolute left-16 right-16 z-10 rounded-b-3xl border-2 border-t-0 border-foreground bg-background transition-colors md:hidden"
+		in:slide={{
+			duration: $transitionDuration
+		}}
+		out:slide={{
+			duration: $transitionDuration
+		}}
 	>
 		<div class="flex flex-col items-center space-y-4 p-6 text-lg font-semibold">
 			{#each navLinks as { text, redirect }}

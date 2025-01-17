@@ -4,7 +4,7 @@
 </script>
 
 <div
-	class="flex flex-col items-center justify-center gap-16 bg-foreground p-32 text-center text-background lg:flex-row lg:text-start"
+	class="flex flex-col items-center justify-center gap-16 bg-foreground p-32 text-center text-background transition-colors lg:flex-row lg:text-start"
 >
 	<div class="flex flex-col space-y-2">
 		<div class="font-fancy text-4xl font-bold">Randware</div>

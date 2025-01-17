@@ -6,9 +6,9 @@
 </script>
 
 <div class="space-y-32">
-	<div class="flex flex-col items-center gap-12 md:flex-row md:gap-16">
+	<div class="flex flex-col items-center gap-12 md:flex-row">
 		<div class="flex-1 text-center">
-			<h2 class="font-fancy mb-4 text-4xl font-bold">Random software, you may enjoy.</h2>
+			<div class="font-fancy mb-4 text-4xl font-bold">Random software, you may enjoy.</div>
 			<div class="mb-6 text-xl">We ❤️ software.</div>
 		</div>
 	</div>

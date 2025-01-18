@@ -11,16 +11,16 @@
 	export let links: Link[];
 </script>
 
-<div class="flex flex-col items-center lg:items-start">
+<div class="flex flex-col items-center">
 	<div class="text-lg font-bold">{heading}</div>
 	{#each links as link}
-		<a href={link.url} target="_blank" class="flex items-center gap-2">
+		<a href={link.url} target="_blank" class="flex w-full items-center gap-2">
 			{#if link.icon}
 				{@const Icon = link.icon}
 				<Icon size={16} />
 			{/if}
 
-			<div class="text-lg underline">{link.name}</div>
+			<div class="mx-auto text-lg underline">{link.name}</div>
 		</a>
 	{/each}
 </div>

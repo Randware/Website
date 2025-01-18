@@ -33,12 +33,13 @@
 	font-family: 'Rubik', sans-serif;
 }
 
+/*  FIX: Remove all theme transitions for now, as they only cause issues */
 * {
-	transition: background-color var(--transition-duration) var(--transition-animation);
+	/*transition: background-color var(--transition-duration) var(--transition-animation);*/
 
 	@apply font-minimal;
 }
 
-:is(.light, .dark) {
-	transition-property: background-color, color, border;
-}
+/*:is(.light, .dark) {*/
+/*	transition-property: background-color, color, border;*/
+/*}*/

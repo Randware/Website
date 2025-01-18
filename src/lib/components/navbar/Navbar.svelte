@@ -22,7 +22,7 @@
 </script>
 
 <nav
-	class="z-20 flex items-center justify-between rounded-full border-2 border-foreground bg-background p-3 text-foreground transition-colors"
+	class="z-20 flex items-center justify-between rounded-full border-2 border-foreground bg-background p-3 text-foreground"
 >
 	<a href="/" class="ms-4">
 		<RandwareLogo size={56} />
@@ -44,7 +44,7 @@
 
 {#if menuOpen}
 	<div
-		class="absolute left-16 right-16 z-10 rounded-b-3xl border-2 border-t-0 border-foreground bg-background transition-colors md:hidden"
+		class="absolute left-16 right-16 z-10 rounded-b-3xl border-2 border-t-0 border-foreground bg-background md:hidden"
 		in:slide={{
 			duration: $transitionDuration
 		}}

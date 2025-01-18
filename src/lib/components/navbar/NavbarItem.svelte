@@ -13,5 +13,7 @@
 	href={redirect}
 	class="{currentPath() === redirect
 		? 'text-foreground'
-		: 'text-foreground/80 hover:text-foreground'} transition-colors">{text}</a
+		: 'text-foreground/80 hover:text-foreground'} hover:transition-colors"
 >
+	{text}
+</a>

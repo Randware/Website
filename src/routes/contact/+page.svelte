@@ -1,7 +1,11 @@
 <script>
 	import LinkCollection from '$lib/components/LinkCollection.svelte';
+	import UserLinkCollection from '$lib/components/UserLinkCollection.svelte';
 	import { Container, Github, Gitlab, Youtube } from 'lucide-svelte';
 	import Twitch from 'lucide-svelte/icons/twitch';
+
+	import ghaxzPicture from '$lib/assets/images/ghaxz-picture.png?enhanced';
+	import dariosPicture from '$lib/assets/images/darios-picture.png?enhanced';
 </script>
 
 <div class="space-y-32">
@@ -46,7 +50,9 @@
 			<div class="font-fancy text-4xl font-bold">Members</div>
 
 			<div class="flex flex-wrap justify-evenly gap-x-24 gap-y-12">
-				<LinkCollection
+				<UserLinkCollection
+					username="GHaxZ"
+					picture={ghaxzPicture}
 					links={[
 						{
 							name: 'GitHub',
@@ -62,11 +68,17 @@
 							name: 'YouTube',
 							url: 'https://youtube.com/@GHaxZ',
 							icon: Youtube
+						},
+						{
+							name: 'Gitlab',
+							url: 'https://gitlab.com/GHaxZ',
+							icon: Gitlab
 						}
 					]}
-					heading="GHaxZ"
 				/>
-				<LinkCollection
+				<UserLinkCollection
+					username="Dari-OS"
+					picture={dariosPicture}
 					links={[
 						{
 							name: 'GitHub',
@@ -74,12 +86,11 @@
 							icon: Github
 						},
 						{
-							name: 'Twitch',
-							url: 'https://twitch.tv/dari_os',
-							icon: Twitch
+							name: 'Gitlab',
+							url: 'https://gitlab.com/Dari-OS',
+							icon: Gitlab
 						}
 					]}
-					heading="Dari-OS"
 				/>
 			</div>
 		</div>

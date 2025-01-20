@@ -1,6 +1,4 @@
 <script lang="ts">
-	//  TODO: Create LinkCollection, UserLinkCollection (with profile picture), (maybe) FooterLinkCollection
-
 	import { type Icon } from 'lucide-svelte';
 
 	interface Link {

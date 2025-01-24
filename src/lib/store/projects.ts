@@ -1,3 +1,6 @@
+//  TODO: Add rate limit check for GitHub API,
+//  avoid updating cache if rate limit is reached
+
 import { config } from "dotenv";
 import NodeCache from 'node-cache';
 
@@ -30,14 +33,14 @@ export async function getProjects(): Promise<Project[]> {
     return cachedProjects;
   }
 
+  console.log("Updating expired cache");
+
   const projects = await fetchProjects();
   projectCache.set('projects', projects);
   return projects;
 }
 
 async function fetchProjects(): Promise<Project[]> {
-  console.log("ALARM FETCH DETECTED !!!!!!!!!!!!!!!!");
-
   const headers = {
     Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
     Accept: "application/vnd.github.v3+json",

@@ -33,6 +33,15 @@
 	font-family: 'Rubik', sans-serif;
 }
 
+.scrollbar {
+	scrollbar-width: none;
+}
+
+.scrollbar::-webkit-scrollbar {
+	width: 0;
+	height: 0;
+}
+
 /*  FIX: Remove all theme transitions for now, as they only cause issues */
 * {
 	/*transition: background-color var(--transition-duration) var(--transition-animation);*/

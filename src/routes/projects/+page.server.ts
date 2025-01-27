@@ -1,4 +1,3 @@
-// +page.server.ts
 import type { PageServerLoad } from './$types';
 import { getProjects } from "$lib/store/projects";
 

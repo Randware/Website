@@ -1,9 +1,7 @@
 //  TODO: Add rate limit check for GitHub API,
 //  avoid updating cache if rate limit is reached
-
 import { config } from "dotenv";
 import NodeCache from 'node-cache';
-
 config();
 
 export interface Project {
@@ -23,8 +21,8 @@ const USERNAME: string = "randware";
 const EXLUDED_REPOS: string[] = [".github"];
 
 const projectCache = new NodeCache({
-  stdTTL: 600, // 10 minutes 
-  checkperiod: 620
+  stdTTL: 1800, // 30 mins
+  checkperiod: 300 // 5 mins
 });
 
 export async function getProjects(): Promise<Project[]> {
@@ -32,8 +30,6 @@ export async function getProjects(): Promise<Project[]> {
   if (cachedProjects) {
     return cachedProjects;
   }
-
-  console.log("Updating expired cache");
 
   const projects = await fetchProjects();
   projectCache.set('projects', projects);
@@ -47,8 +43,8 @@ async function fetchProjects(): Promise<Project[]> {
   };
 
   const reposUrl: string = `https://api.github.com/users/${USERNAME}/repos`;
-
   const reposResponse = await fetch(reposUrl, { headers });
+
   if (!reposResponse.ok) {
     throw {
       code: reposResponse.status,
@@ -66,7 +62,31 @@ async function fetchProjects(): Promise<Project[]> {
       let readmeContent: string = "";
       if (readmeResponse.ok) {
         const readmeJson = await readmeResponse.json();
-        readmeContent = readmeJson.content ? atob(readmeJson.content) : "";
+        const rawReadmeUrl = readmeJson.download_url;
+
+        if (rawReadmeUrl) {
+          const rawResponse = await fetch(rawReadmeUrl);
+          if (rawResponse.ok) {
+            const markdownText = await rawResponse.text();
+
+            const markdownResponse = await fetch('https://api.github.com/markdown', {
+              method: 'POST',
+              headers: {
+                ...headers,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                text: markdownText,
+                mode: 'gfm',
+                context: repo.full_name
+              })
+            });
+
+            if (markdownResponse.ok) {
+              readmeContent = await markdownResponse.text();
+            }
+          }
+        }
       }
 
       return {

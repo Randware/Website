@@ -17,12 +17,7 @@
 	<div class="grid grid-cols-1 place-items-center gap-12 lg:grid-cols-2 2xl:grid-cols-3">
 		{#each projects as project}
 			<div class="w-full">
-				<ProjectItem
-					name={project.name}
-					about={project.about}
-					stars={project.stars}
-					url={project.url}
-				/>
+				<ProjectItem {project} />
 			</div>
 		{/each}
 	</div>

@@ -33,11 +33,11 @@
 	font-family: 'Rubik', sans-serif;
 }
 
-.scrollbar {
+.no-scrollbar {
 	scrollbar-width: none;
 }
 
-.scrollbar::-webkit-scrollbar {
+.no-scrollbar::-webkit-scrollbar {
 	width: 0;
 	height: 0;
 }

@@ -5,10 +5,21 @@
 	import NavbarMenuButton from './NavbarMenuButton.svelte';
 
 	import { afterNavigate } from '$app/navigation';
-	import { slide } from 'svelte/transition';
+	import { fly, slide } from 'svelte/transition';
 	import { transitionDuration } from '$lib/store/settings';
+	import { browser } from '$app/environment';
 
 	let menuOpen: boolean = false;
+
+	$: {
+		if (browser) {
+			if (menuOpen) {
+				document.body.style.overflow = 'hidden';
+			} else {
+				document.body.style.overflow = 'auto';
+			}
+		}
+	}
 
 	afterNavigate(() => {
 		menuOpen = false;
@@ -21,8 +32,17 @@
 	];
 </script>
 
+{#if menuOpen}
+	<div
+		class="fixed inset-0 z-0 bg-black/60 md:hidden"
+		in:fly={{ duration: $transitionDuration }}
+		out:fly={{ duration: $transitionDuration }}
+		onclick={() => (menuOpen = false)}
+	></div>
+{/if}
+
 <nav
-	class="z-20 flex items-center justify-between rounded-full border-2 border-foreground bg-background p-3 text-foreground"
+	class="relative z-10 flex items-center justify-between rounded-full border-2 border-foreground bg-background p-3 text-foreground"
 >
 	<a href="/" class="ms-4">
 		<RandwareLogo size={56} />

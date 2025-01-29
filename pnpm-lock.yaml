@@ -26,9 +26,6 @@ importers:
       '@tailwindcss/typography':
         specifier: ^0.5.15
         version: 0.5.15(tailwindcss@3.4.17)
-      github-markdown-css:
-        specifier: ^5.8.1
-        version: 5.8.1
       lucide-svelte:
         specifier: ^0.469.0
         version: 0.469.0(svelte@5.16.0)
@@ -1056,10 +1053,6 @@ packages:
 
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
-
-  github-markdown-css@5.8.1:
-    resolution: {integrity: sha512-8G+PFvqigBQSWLQjyzgpa2ThD9bo7+kDsriUIidGcRhXgmcaAWUIpCZf8DavJgc+xifjbCG+GvMyWr0XMXmc7g==}
-    engines: {node: '>=10'}
 
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
@@ -2650,8 +2643,6 @@ snapshots:
     optional: true
 
   function-bind@1.1.2: {}
-
-  github-markdown-css@5.8.1: {}
 
   glob-parent@5.1.2:
     dependencies:

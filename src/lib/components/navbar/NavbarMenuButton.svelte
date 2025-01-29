@@ -9,7 +9,7 @@
 </script>
 
 <button
-	on:click={toggle}
+	onclick={toggle}
 	class="relative overflow-hidden rounded-full border-2 border-foreground text-foreground"
 >
 	<span

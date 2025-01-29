@@ -31,9 +31,9 @@
 	<div
 		class="flex flex-col gap-8 rounded-b-3xl border-2 border-foreground p-8 align-middle text-lg"
 	>
-		<div class="break-words">{project.about}</div>
-		<div class="flex flex-wrap items-center gap-4">
-			<div class="flex gap-2">
+		<div class="break-words text-center">{project.about}</div>
+		<div class="flex items-center gap-4">
+			<div class="flex flex-wrap gap-2">
 				<button
 					class="rounded-xl bg-foreground px-4 py-2 text-lg text-background hover:bg-foreground/80 hover:transition-colors"
 					onclick={toggleModal}

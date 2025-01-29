@@ -17,11 +17,3 @@ if (browser) {
 }
 
 export const transitionDuration: Writable<number> = writable(300);
-
-if (browser) {
-  transitionDuration.set(
-    parseInt(
-      getComputedStyle(document.documentElement).getPropertyValue('--transition-duration')
-    )
-  )
-}

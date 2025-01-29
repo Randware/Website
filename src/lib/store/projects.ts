@@ -37,10 +37,14 @@ export async function getProjects(): Promise<Project[]> {
 }
 
 async function fetchProjects(): Promise<Project[]> {
-  const headers = {
-    Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+  const headers: Record<string, string> = {
     Accept: "application/vnd.github.v3+json",
   };
+
+  // Add authorization only if the token is available
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  }
 
   const reposUrl: string = `https://api.github.com/users/${USERNAME}/repos`;
   const reposResponse = await fetch(reposUrl, { headers });

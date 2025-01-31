@@ -71,4 +71,5 @@ In case you have any **issues** or **feedback**, please [open a GitHub issue](ht
 
 ## License
 
-This project is licensed under the [MIT](https://choosealicense.com/licenses/mit/) license.
+This project is licensed under a modified version of the [MIT](https://choosealicense.com/licenses/mit/) license.
+It includes an additional clause, which prohibits the use of this website to impersonate the Randware organization.

@@ -1,4 +1,4 @@
-## The Randware website 🌐
+# The Randware website 🌐
 
 #### The source code for the official Randware website - [randware.org](https://randware.org/)
 

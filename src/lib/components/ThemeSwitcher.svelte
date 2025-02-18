@@ -10,6 +10,7 @@
 
 <button
 	onclick={toggle}
+	aria-label={`Switch to ${$theme === 'dark' ? 'light' : 'dark'} mode`}
 	class="group relative overflow-hidden overflow-x-hidden rounded-full border-2 border-foreground text-foreground hover:text-background"
 >
 	<span class="relative z-10 flex h-full w-full items-center justify-center p-3 transition-colors">

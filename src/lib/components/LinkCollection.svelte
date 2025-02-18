@@ -20,7 +20,12 @@
 
 	<div class="flex flex-col items-center gap-1">
 		{#each links as link}
-			<a href={link.url} target="_blank" class="flex w-full items-center gap-4">
+			<a
+				href={link.url}
+				aria-label={`Check out ${link.name}${heading ? ' from ' + heading : ''}`}
+				target="_blank"
+				class="flex w-full items-center gap-4"
+			>
 				{#if link.icon}
 					{@const Icon = link.icon}
 					<Icon size={24} />

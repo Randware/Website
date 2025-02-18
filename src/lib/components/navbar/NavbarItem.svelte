@@ -11,6 +11,7 @@
 
 <a
 	href={redirect}
+	aria-label="Go to the {text.toLowerCase()} page"
 	class="{currentPath() === redirect
 		? 'text-foreground'
 		: 'text-foreground/80 hover:text-foreground'} hover:transition-colors"

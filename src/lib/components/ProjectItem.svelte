@@ -44,6 +44,7 @@
 				<a
 					class="rounded-xl bg-foreground px-4 py-2 text-lg text-background hover:bg-foreground/80 hover:transition-colors"
 					href={project.url}
+					aria-label="Check out the {project.name} project on GitHub"
 					target="_blank"
 					rel="noopener noreferrer"
 				>

@@ -14,7 +14,12 @@
 <div class="flex flex-col items-center">
 	<div class="text-lg font-bold">{heading}</div>
 	{#each links as link}
-		<a href={link.url} target="_blank" class="flex w-full items-center gap-2">
+		<a
+			href={link.url}
+			aria-label="Check out {link.name}"
+			target="_blank"
+			class="flex w-full items-center gap-2"
+		>
 			{#if link.icon}
 				{@const Icon = link.icon}
 				<Icon size={16} />

@@ -44,7 +44,7 @@
 <nav
 	class="relative z-10 flex items-center justify-between rounded-full border-2 border-foreground bg-background p-3 text-foreground"
 >
-	<a href="/" class="ms-4">
+	<a href="/" aria-label="Go to the start page" class="ms-4">
 		<RandwareLogo size={56} />
 	</a>
 

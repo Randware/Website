@@ -44,7 +44,11 @@
 				For further questions, feel free to reach out to us!
 			</div>
 			<div class="mb-6 text-xl">
-				You can find our contacts <a class="underline" href="/contact">here</a>.
+				You can find our contacts <a
+					class="underline"
+					href="/contact"
+					aria-label="Go to the contact page">here</a
+				>.
 			</div>
 		</div>
 	</div>

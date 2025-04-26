@@ -8,7 +8,7 @@
 >
 	<div class="flex flex-col space-y-2">
 		<div class="font-fancy text-4xl font-bold">Randware</div>
-		<div class="text-xl">Random software, you may enjoy.</div>
+		<div class="text-xl">Random software you may enjoy.</div>
 	</div>
 
 	<div class="flex flex-1 flex-wrap justify-evenly gap-x-16 gap-y-8">

@@ -65,7 +65,7 @@
 
 	#theme-ripple {
 		position: fixed;
-		z-index: 9;
+		z-index: 11;
 		inset: 0;
 		background: var(--ink);
 		opacity: 0;

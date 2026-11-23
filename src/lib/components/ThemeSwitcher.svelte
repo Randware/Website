@@ -1,12 +1,16 @@
 <script lang="ts">
+	import { beforeNavigate } from '$app/navigation';
 	import { Moon, Sun } from 'lucide-svelte';
-	import { onMount } from 'svelte';
+	import { flushSync, onMount } from 'svelte';
 
 	type Theme = 'light' | 'dark';
 
 	let mode = $state<Theme>();
 	let preference: Theme | undefined;
+	let activeTransition: { animation: ViewTransition; target: Theme } | undefined;
 	const label = $derived(mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+
+	beforeNavigate(stopReveal);
 
 	onMount(() => {
 		const system = window.matchMedia('(prefers-color-scheme: dark)');
@@ -19,7 +23,10 @@
 
 		sync();
 		system.addEventListener('change', sync);
-		return () => system.removeEventListener('change', sync);
+		return () => {
+			system.removeEventListener('change', sync);
+			stopReveal();
+		};
 	});
 
 	function setTheme(next: Theme) {
@@ -34,29 +41,77 @@
 		}
 	}
 
-	function toggle(event: MouseEvent & { currentTarget: HTMLButtonElement }) {
-		if (!mode) return;
-		setTheme(mode === 'dark' ? 'light' : 'dark');
+	function clearReveal(transition: ViewTransition) {
+		if (activeTransition?.animation !== transition) return;
 
-		const ripple = document.getElementById('theme-ripple');
-		if (!ripple || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		activeTransition = undefined;
+		const root = document.documentElement;
+		root.classList.remove('theme-reveal');
+		root.style.removeProperty('--theme-origin');
+		root.style.removeProperty('--theme-radius');
+	}
+
+	function stopReveal() {
+		if (!activeTransition) return;
+		const { animation, target } = activeTransition;
+		animation.skipTransition();
+		clearReveal(animation);
+		if (target !== preference) setTheme(target);
+	}
+
+	function toggle(event: MouseEvent & { currentTarget: HTMLButtonElement }) {
+		const current = activeTransition?.target ?? mode;
+		if (!current) return;
+
+		const next = current === 'dark' ? 'light' : 'dark';
+		if (activeTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			stopReveal();
+			setTheme(next);
+			return;
+		}
 
 		const { left, top, width, height } = event.currentTarget.getBoundingClientRect();
 		const x = left + width / 2;
 		const y = top + height / 2;
 		const origin = `${x}px ${y}px`;
-		const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+		const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)) + 1;
+
+		if (!document.startViewTransition) {
+			setTheme(next);
+			playRipple(origin, radius);
+			return;
+		}
+
+		const root = document.documentElement;
+		root.style.setProperty('--theme-origin', origin);
+		root.style.setProperty('--theme-radius', `${radius}px`);
+		root.classList.add('theme-reveal');
+
+		const animation = document.startViewTransition(() => {
+			if (activeTransition?.animation === animation) flushSync(() => setTheme(next));
+		});
+		activeTransition = { animation, target: next };
+		void animation.ready.catch(() => {});
+		const finish = () => clearReveal(animation);
+		void animation.finished.then(finish, finish);
+	}
+
+	function playRipple(origin: string, radius: number) {
+		const ripple = document.getElementById('theme-ripple');
+		if (!ripple) return;
 
 		for (const animation of ripple.getAnimations()) animation.cancel();
 		ripple.animate(
 			[
-				{ clipPath: `circle(0 at ${origin})`, opacity: 0.16 },
+				{ clipPath: `circle(0 at ${origin})`, opacity: 0.22 },
 				{ clipPath: `circle(${radius}px at ${origin})`, opacity: 0 }
 			],
 			{ duration: 380, easing: 'cubic-bezier(0.25, 0.65, 0.3, 1)' }
 		);
 	}
 </script>
+
+<svelte:window onscroll={stopReveal} onresize={stopReveal} />
 
 <button
 	class="header-control pressable"

@@ -71,7 +71,7 @@
 		border: 1px solid var(--print-dark);
 		border-radius: 50%;
 		background: repeating-linear-gradient(45deg, var(--print-mid) 0 1px, transparent 1px 5px);
-		transform: translate(-50%, -50%) rotate(var(--angle));
+		transform: translate(-50%, -50%) rotate(var(--angle)) scale(var(--project-plate-scale, 1));
 	}
 
 	.plate[data-shape='1'] {
@@ -87,5 +87,11 @@
 	.plate[data-shape='3'] {
 		border-radius: 50% 0;
 		background: repeating-linear-gradient(90deg, var(--print-mid) 0 1px, transparent 1px 6px);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.plate {
+			transition: transform 280ms cubic-bezier(0.22, 0.61, 0.36, 1);
+		}
 	}
 </style>

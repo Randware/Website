@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import Brand from '#lib/components/Brand.svelte';
 	import ThemeSwitcher from '#lib/components/ThemeSwitcher.svelte';
+	import { easedScrollProgress } from '#lib/scroll.js';
 	import { ArrowRight, Menu, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 
@@ -13,17 +14,11 @@
 		{ label: 'Contact', route: '/contact' }
 	] as const;
 
-	let scrolled = $state(false);
+	let scrollProgress = $state(0);
 	let menuOpen = $state(false);
 	let enhanced = $state(false);
 	let headerBar: HTMLDivElement;
 	let menuButton: HTMLElement;
-
-	function updateScrollPosition() {
-		const offset = window.scrollY;
-		if (offset >= 20) scrolled = true;
-		else if (offset <= 4) scrolled = false;
-	}
 
 	function closeMenu() {
 		menuOpen = false;
@@ -45,19 +40,55 @@
 
 	onMount(() => {
 		enhanced = true;
-		updateScrollPosition();
-
+		const root = document.documentElement;
 		const desktop = matchMedia('(min-width: 48rem)');
-		desktop.addEventListener('change', closeMenu);
-		return () => desktop.removeEventListener('change', closeMenu);
+		const motion = matchMedia('(prefers-reduced-motion: reduce)');
+		const listeners = new AbortController();
+		const { signal } = listeners;
+		let distance = 0;
+		let frame = 0;
+
+		function draw() {
+			frame = 0;
+			if (motion.matches) {
+				if (scrollY >= 20) scrollProgress = 1;
+				else if (scrollY <= 4) scrollProgress = 0;
+			} else {
+				scrollProgress = easedScrollProgress(scrollY, distance);
+			}
+		}
+
+		function measure() {
+			const { clientHeight, scrollHeight } = root;
+			const range = Number.parseFloat(
+				getComputedStyle(root).getPropertyValue('--frame-scroll-distance')
+			);
+			distance = Math.min(scrollHeight - clientHeight, range > 0 ? range : clientHeight * 0.34);
+			cancelAnimationFrame(frame);
+			draw();
+		}
+
+		function onScroll() {
+			if (!frame) frame = requestAnimationFrame(draw);
+		}
+
+		const observer = new ResizeObserver(measure);
+		observer.observe(document.body);
+		window.addEventListener('scroll', onScroll, { passive: true, signal });
+		window.addEventListener('resize', measure, { signal });
+		desktop.addEventListener('change', closeMenu, { signal });
+		motion.addEventListener('change', measure, { signal });
+		measure();
+
+		return () => {
+			listeners.abort();
+			observer.disconnect();
+			cancelAnimationFrame(frame);
+		};
 	});
 </script>
 
-<svelte:window
-	onscroll={updateScrollPosition}
-	onpointerdown={closeOnOutsidePress}
-	onkeydown={closeOnEscape}
-/>
+<svelte:window onpointerdown={closeOnOutsidePress} onkeydown={closeOnEscape} />
 
 {#snippet navigationLinks(mobile: boolean)}
 	{#each links as { label, route } (route)}
@@ -78,7 +109,11 @@
 	{/each}
 {/snippet}
 
-<header data-floating={scrolled} data-menu-open={menuOpen}>
+<header
+	data-floating={scrollProgress > 0}
+	data-menu-open={menuOpen}
+	style:--page-scroll-progress={scrollProgress}
+>
 	<div class="header-bar" bind:this={headerBar}>
 		<div class="header-inner">
 			<Brand size={56} showName={false} />
@@ -123,12 +158,18 @@
 	header {
 		--header-row-height: 4.75rem;
 		--header-motion: 240ms cubic-bezier(0.25, 0.75, 0.35, 1);
+		--header-detach: var(--hero-scroll-progress, var(--page-scroll-progress, 0));
+		--header-menu-shadow: 0;
 
 		position: sticky;
 		z-index: 10;
 		inset-block-start: 0;
 		min-block-size: calc(var(--header-row-height) + 4px);
 		pointer-events: none;
+	}
+
+	header[data-menu-open='true'] {
+		--header-menu-shadow: calc(1 - var(--header-detach));
 	}
 
 	header::before {
@@ -141,12 +182,8 @@
 			color-mix(in srgb, var(--paper) 65%, transparent) 53%,
 			transparent
 		);
-		opacity: 0;
+		opacity: var(--header-detach);
 		content: '';
-	}
-
-	header[data-floating='true']::before {
-		opacity: 1;
 	}
 
 	.header-bar {
@@ -154,48 +191,42 @@
 		z-index: 0;
 		inset: 0 0 auto;
 		padding: 2px var(--gutter);
-		transform: translateY(0);
+		transform: translateY(calc(var(--floating-offset, 0.875rem) * var(--header-detach)));
 		-webkit-user-select: none;
 		user-select: none;
 		-webkit-tap-highlight-color: transparent;
 	}
 
 	.header-bar::before {
+		--floating-opacity: calc(var(--header-detach) * 100%);
+		--menu-shadow-opacity: calc(var(--header-menu-shadow) * 100%);
+
 		position: absolute;
 		z-index: -1;
-		inset: 0;
-		border: 2px solid transparent;
+		inset: 0 calc(var(--frame-inset) * var(--header-detach));
+		border: 2px solid color-mix(in srgb, var(--line-strong) var(--floating-opacity), transparent);
 		border-bottom-color: var(--line-strong);
+		border-radius: calc(var(--paper-radius) * var(--header-detach));
 		background-color: var(--card);
+		box-shadow:
+			0.25rem 0.3125rem 0 color-mix(in srgb, var(--line) var(--floating-opacity), transparent),
+			0 -0.5rem 1.5rem rgb(0 0 0 / calc(0.2 * var(--header-detach))),
+			0 0.4rem 1.2rem
+				rgb(0 0 0 / calc(0.1 * var(--header-detach) + 0.12 * var(--header-menu-shadow))),
+			0 0.25rem 0 color-mix(in srgb, var(--paper-edge) var(--menu-shadow-opacity), transparent);
 		pointer-events: auto;
 		content: '';
 	}
 
-	header[data-floating='false'][data-menu-open='true'] .header-bar::before {
-		box-shadow:
-			0 0.25rem 0 var(--paper-edge),
-			0 0.5rem 1.2rem rgb(0 0 0 / 12%);
-	}
-
-	header[data-floating='true'] .header-bar {
-		transform: translateY(var(--floating-offset, 0.875rem));
-	}
-
-	header[data-floating='true'] .header-bar::before {
-		inset-inline: var(--frame-inset);
-		border-color: var(--line-strong);
-		border-radius: var(--paper-radius);
-		box-shadow:
-			0.25rem 0.3125rem 0 var(--line),
-			0 -0.5rem 1.5rem rgb(0 0 0 / 20%),
-			0 0.4rem 1.2rem rgb(0 0 0 / 10%);
-	}
-
 	@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-		header[data-floating='true'] .header-bar::before {
-			background-color: color-mix(in srgb, var(--card) 86%, transparent);
-			-webkit-backdrop-filter: blur(16px);
-			backdrop-filter: blur(16px);
+		.header-bar::before {
+			background-color: color-mix(
+				in srgb,
+				var(--card) calc(100% - 14% * var(--header-detach)),
+				transparent
+			);
+			-webkit-backdrop-filter: blur(calc(16px * var(--header-detach)));
+			backdrop-filter: blur(calc(16px * var(--header-detach)));
 		}
 	}
 
@@ -362,20 +393,6 @@
 			transition:
 				transform 180ms ease-out,
 				opacity 180ms ease;
-		}
-
-		header::before {
-			transition: opacity var(--header-motion);
-		}
-
-		.header-bar {
-			transition: transform var(--header-motion);
-		}
-
-		.header-bar::before {
-			transition-property: inset-inline, border-radius, border-color, box-shadow;
-			transition-duration: 240ms;
-			transition-timing-function: cubic-bezier(0.25, 0.75, 0.35, 1);
 		}
 
 		.menu-icon,

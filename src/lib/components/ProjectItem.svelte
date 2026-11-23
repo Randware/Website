@@ -185,6 +185,10 @@
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
+		.project:has(.project-link:focus-visible) {
+			--project-plate-scale: 1.16;
+		}
+
 		.project-arrow {
 			transition:
 				transform 140ms ease,
@@ -194,6 +198,10 @@
 		}
 
 		@media (hover: hover) {
+			.project:hover {
+				--project-plate-scale: 1.16;
+			}
+
 			.project:has(.project-link:hover) .project-arrow {
 				transform: translateX(3px);
 			}

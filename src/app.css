@@ -23,6 +23,12 @@
 	initial-value: #f8f6eb;
 }
 
+@property --frame-scroll-distance {
+	syntax: '<length>';
+	inherits: true;
+	initial-value: 0px;
+}
+
 :root {
 	color-scheme: light dark;
 	--paper: light-dark(#f2f0e3, #202020);
@@ -36,6 +42,7 @@
 	--paper-radius: 0.625rem;
 	--header-control-size: 2.875rem;
 	--frame-inset: max(clamp(0.5rem, 2vw, 1.5rem), calc((100% - 78rem) / 2));
+	--frame-scroll-distance: clamp(10rem, 34svh, 20rem);
 	--muted: color-mix(in srgb, var(--ink) 75%, var(--paper));
 	--accent: var(--ink);
 	--accent-hover: color-mix(in srgb, var(--ink) 84%, var(--paper));
@@ -248,6 +255,45 @@ h3 {
 			--paper 180ms ease-out,
 			--ink 180ms ease-out,
 			--card 180ms ease-out;
+	}
+
+	:root.theme-reveal {
+		transition: none;
+	}
+
+	.theme-reveal .site *,
+	.theme-reveal .site *::before,
+	.theme-reveal .site *::after {
+		/* Capture the new colors immediately so the circle sets the pace of the change. */
+		transition-duration: 0s !important;
+	}
+
+	:root.theme-reveal::view-transition {
+		pointer-events: none;
+	}
+
+	:root.theme-reveal::view-transition-group(root),
+	:root.theme-reveal::view-transition-old(root) {
+		animation: none;
+	}
+
+	:root.theme-reveal::view-transition-old(root),
+	:root.theme-reveal::view-transition-new(root) {
+		mix-blend-mode: normal;
+	}
+
+	:root.theme-reveal::view-transition-new(root) {
+		animation: reveal-theme 390ms cubic-bezier(0.25, 0.7, 0.3, 1) both;
+	}
+
+	@keyframes reveal-theme {
+		from {
+			clip-path: circle(0 at var(--theme-origin));
+		}
+
+		to {
+			clip-path: circle(var(--theme-radius) at var(--theme-origin));
+		}
 	}
 
 	.text-link,

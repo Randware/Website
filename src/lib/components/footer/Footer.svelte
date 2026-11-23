@@ -6,10 +6,23 @@
 	const year = new Date().getUTCFullYear();
 </script>
 
-<footer>
-	<div class="footer-paper">
-		<div class="footer-main">
-			<a class="footer-name" href={resolve('/')}>Randware</a>
+<footer class="shell">
+	<div class="footer-stack">
+		<div class="footer-paper paper-panel">
+			<div class="footer-main">
+				<div class="footer-brand">
+					<a class="footer-name" href={resolve('/')}>Randware</a>
+					<small>© {year} Randware</small>
+				</div>
+				<a
+					class="to-top header-control pressable"
+					href="#page-top"
+					aria-label="Back to top"
+					title="Back to top"
+				>
+					<ArrowUp size={19} strokeWidth={1.9} aria-hidden="true" />
+				</a>
+			</div>
 			<nav class="profiles" aria-label="Randware social links">
 				<ul>
 					{#each organizationLinks as { name, url, icon: Icon } (url)}
@@ -29,57 +42,83 @@
 				</ul>
 			</nav>
 		</div>
-
-		<div class="footer-end">
-			<small>© {year} Randware</small>
-			<a class="to-top pressable" href="#page-top">
-				Back to top <ArrowUp size={17} strokeWidth={1.9} aria-hidden="true" />
-			</a>
-		</div>
 	</div>
 </footer>
 
 <style>
 	footer {
-		margin-inline: var(--frame-inset);
-		padding-block-end: clamp(1.5rem, 4vw, 3rem);
+		--footer-padding: clamp(1rem, 2.5vw, 1.625rem);
+
+		padding-block-end: clamp(2rem, 4vw, 3rem);
+	}
+
+	.footer-stack {
+		position: relative;
+		isolation: isolate;
+	}
+
+	.footer-stack::before {
+		position: absolute;
+		z-index: -1;
+		inset: 7px -5px -7px 5px;
+		border: 1px solid var(--line-strong);
+		border-radius: var(--paper-radius);
+		background: color-mix(in srgb, var(--card), var(--ink) 5%);
+		content: '';
 	}
 
 	.footer-paper {
-		--focus: var(--paper);
-		--footer-line: color-mix(in srgb, var(--paper) 52%, var(--ink));
-		--footer-muted: color-mix(in srgb, var(--paper) 82%, var(--ink));
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+		box-shadow: none;
+	}
 
-		padding: clamp(0.875rem, 2.5vw, 1.625rem);
-		border: 2px solid var(--ink);
-		border-radius: var(--paper-radius);
-		background: var(--ink);
-		box-shadow: 0.25rem 0.3125rem 0 var(--line);
-		color: var(--paper);
+	.footer-paper::before {
+		position: absolute;
+		z-index: -1;
+		inset: 0;
+		background-image:
+			repeating-linear-gradient(0deg, transparent 0 11px, var(--line) 11px 12px),
+			repeating-linear-gradient(90deg, transparent 0 11px, var(--line) 11px 12px);
+		mask-image: linear-gradient(90deg, transparent 35%, #000);
+		opacity: 0.18;
+		pointer-events: none;
+		content: '';
 	}
 
 	.footer-main {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) auto;
 		align-items: center;
-		gap: 0.5rem clamp(0.5rem, 3vw, 1.5rem);
-		padding-bottom: 0.5rem;
+		gap: 1rem;
+		padding: var(--footer-padding);
+	}
+
+	.footer-brand {
+		display: grid;
+		gap: 0.4375rem;
 	}
 
 	.footer-name {
 		width: fit-content;
 		font-family: var(--serif);
-		font-size: clamp(1.375rem, 3.4vw, 2.5rem);
+		font-size: clamp(1.625rem, 3.4vw, 2rem);
 		font-weight: 700;
 		letter-spacing: -0.065em;
-		line-height: 1.12;
+		line-height: 1.2;
+	}
+
+	.profiles {
+		padding: 0.625rem var(--footer-padding);
+		border-top: 1px dashed var(--line);
 	}
 
 	.profiles ul {
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: flex-end;
-		gap: 0 clamp(0.375rem, 1.8vw, 1.375rem);
+		justify-content: space-between;
+		gap: 0 1rem;
 	}
 
 	.profiles a {
@@ -105,62 +144,29 @@
 		text-underline-offset: 0.2em;
 	}
 
-	.footer-end {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5rem;
-		padding-top: 0.5rem;
-		border-top: 1px dashed var(--footer-line);
-	}
-
 	small {
-		color: var(--footer-muted);
+		color: var(--muted);
 		font-size: 0.8125rem;
 	}
 
 	.to-top {
-		--press-x: 0px;
-		--press-y: 1px;
-		--press-shadow: transparent;
+		--header-control-size: 2.75rem;
+		--press-y: 2px;
+		--press-shadow: var(--paper-edge);
 
-		display: inline-flex;
-		min-height: 2.75rem;
-		align-items: center;
-		gap: 0.375rem;
-		color: var(--footer-muted);
-		font-size: 0.875rem;
-		font-weight: 500;
-		text-underline-offset: 0.2em;
-	}
-
-	.to-top:is(:hover, :focus-visible) {
-		color: var(--paper);
-		text-decoration: underline;
+		border-color: var(--line-strong);
 	}
 
 	@media (max-width: 44rem) {
-		.profiles a {
-			min-width: 2.75rem;
-			justify-content: center;
-		}
-
-		.profile-name,
-		.profiles a :global(.profile-arrow) {
-			display: none;
-		}
-
-		.profiles a:hover {
-			opacity: 0.7;
+		.profiles ul {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 	}
 
 	@media (max-width: 24rem) {
-		.profiles ul {
-			display: grid;
-			grid-template-columns: repeat(2, 2.75rem);
-			gap: 0;
+		.profiles a :global(.profile-arrow) {
+			display: none;
 		}
 	}
 </style>

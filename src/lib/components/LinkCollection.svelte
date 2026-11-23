@@ -1,38 +1,44 @@
 <script lang="ts">
-	import { type Icon } from 'lucide-svelte';
+	import { ArrowUpRight } from 'lucide-svelte';
+	import type { SocialLink } from '#lib/links.js';
 
-	interface Link {
-		name: string;
-		url: string;
-		icon?: typeof Icon;
-	}
-
-	export let heading: string | undefined = undefined;
-	export let links: Link[];
+	let { links, label }: { links: SocialLink[]; label: string } = $props();
 </script>
 
-<div class="flex flex-col items-center gap-2">
-	{#if heading}
-		<div class="text-2xl font-semibold">
-			{heading}
-		</div>
-	{/if}
-
-	<div class="flex flex-col items-center gap-1">
-		{#each links as link}
-			<a
-				href={link.url}
-				aria-label={`Check out ${link.name}${heading ? ' from ' + heading : ''}`}
-				target="_blank"
-				class="flex w-full items-center gap-4"
-			>
-				{#if link.icon}
-					{@const Icon = link.icon}
-					<Icon size={24} />
-				{/if}
-
-				<div class="mx-auto text-xl underline">{link.name}</div>
+<ul aria-label={label}>
+	{#each links as { name, url, icon: Icon } (url)}
+		<li>
+			<a href={url}>
+				<Icon size={19} strokeWidth={1.65} aria-hidden="true" />
+				<span>{name}</span>
+				<ArrowUpRight size={16} strokeWidth={1.7} aria-hidden="true" />
 			</a>
-		{/each}
-	</div>
-</div>
+		</li>
+	{/each}
+</ul>
+
+<style>
+	li + li {
+		border-top: 1px solid var(--line);
+	}
+
+	a {
+		display: grid;
+		min-height: 2.875rem;
+		grid-template-columns: 1.25rem 1fr auto;
+		align-items: center;
+		gap: 0.75rem;
+		color: var(--ink);
+		font-size: 0.9375rem;
+	}
+
+	a :global(svg) {
+		color: var(--accent);
+	}
+
+	a:hover span {
+		color: var(--accent);
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+	}
+</style>

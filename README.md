@@ -57,6 +57,16 @@ This will do the following:
 - Build the new "randware-website" container image
 - And finally, run the container "randware-website" on port 3000
 
+### GitHub data
+
+Public projects load without a token. The server caches the project list for one hour and project
+READMEs and languages for six hours. It serves the last successful response for up to seven days
+while refreshing in the background, and pauses requests when GitHub reports a rate limit.
+
+The cache lives in `.cache/github`. The deployment script mounts a named Docker volume there so
+the cache survives redeploys. Set `GITHUB_CACHE_DIR` to a writable persistent directory if you run
+the app elsewhere.
+
 ## Contributing
 
 Contributions are always welcome!

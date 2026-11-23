@@ -1,17 +1,36 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { ArrowLeft } from 'lucide-svelte';
+
+	const missing = $derived(page.status === 404);
 </script>
 
-<div class="flex h-full items-center justify-center">
-	<div class="flex flex-col items-center">
-		<div class="font-fancy mb-4 text-6xl font-bold">
-			{page.status}
-		</div>
+<svelte:head>
+	<title>{missing ? 'Page not found' : 'Something went wrong'} · Randware</title>
+	<meta name="robots" content="noindex" />
+</svelte:head>
 
-		{#if page.error}
-			<div class="text-3xl">
-				{page.error.message}
-			</div>
-		{/if}
+<div class="shell">
+	<div class="page-heading error">
+		<h1>{missing ? 'Page not found' : 'Something went wrong'}</h1>
+		<p>
+			{missing
+				? 'We couldn’t find that page.'
+				: (page.error?.message ?? 'Please try again in a moment.')}
+		</p>
+		<a class="text-link" href={resolve('/')}>
+			<ArrowLeft size={17} strokeWidth={1.8} aria-hidden="true" /> Back to home
+		</a>
 	</div>
 </div>
+
+<style>
+	.error {
+		padding-bottom: clamp(3.5rem, 8vw, 7rem);
+	}
+
+	.text-link {
+		margin-top: 1rem;
+	}
+</style>

@@ -1,31 +1,43 @@
 <script lang="ts">
-	import { type Icon } from 'lucide-svelte';
+	import type { SocialLink } from '#lib/links.js';
 	import LinkCollection from './LinkCollection.svelte';
 
-	interface Link {
-		name: string;
-		url: string;
-		icon?: typeof Icon;
-	}
-
-	export let username: string;
-	export let picture: string;
-	export let links: Link[];
+	let { name, avatar, links }: { name: string; avatar: string; links: SocialLink[] } = $props();
 </script>
 
-<div class="flex flex-col items-center gap-4">
-	<div class="flex items-center gap-2">
-		{#if picture}
-			<enhanced:img
-				class="w-10 rounded-full border-2 border-foreground"
-				src={picture}
-				alt="{username} profile picture"
-			/>
-		{/if}
-		<div class="text-2xl font-semibold">
-			{username}
-		</div>
+<article class="paper-panel">
+	<div class="profile-heading">
+		<img src={avatar} alt="" width="72" height="72" />
+		<h3>{name}</h3>
 	</div>
 
-	<LinkCollection {links} />
-</div>
+	<LinkCollection {links} label="{name} profiles" />
+</article>
+
+<style>
+	article {
+		height: 100%;
+		min-width: 0;
+		padding: clamp(1.125rem, 2.5vw, 1.5rem);
+	}
+
+	.profile-heading {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.75rem 1rem;
+		margin-bottom: 0.875rem;
+	}
+
+	img {
+		width: 4.5rem;
+		height: 4.5rem;
+		border: 1px solid var(--line);
+		border-radius: var(--paper-radius);
+		object-fit: cover;
+	}
+
+	h3 {
+		font-size: 1.625rem;
+	}
+</style>

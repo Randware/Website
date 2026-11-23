@@ -2,32 +2,31 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="title" content="Randware - Open Source Software Organization" />
-		<meta
-			name="description"
-			content="Randware is an Open-source organization creating accessible, secure, fast, and privacy focused software. Find our contact information and projects here."
-		/>
-		<meta
-			name="keywords"
-			content="open source, software development, privacy, secure software, accessible software, random software"
-		/>
-		<meta name="author" content="Randware" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<link rel="icon" href="%sveltekit.assets%/favicon-light.svg" />
-		<meta name="robots" content="index, follow" />
-		<title>Randware</title>
-		%sveltekit.head%
+		<meta name="author" content="Randware" />
+		<link
+			rel="icon"
+			href="%sveltekit.assets%/favicon-dark.svg"
+			media="(prefers-color-scheme: light)"
+		/>
+		<link
+			rel="icon"
+			href="%sveltekit.assets%/favicon-light.svg"
+			media="(prefers-color-scheme: dark)"
+		/>
 		<script>
-			const savedTheme = localStorage.getItem('theme');
-			const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-				? 'dark'
-				: 'light';
-			const theme = savedTheme || systemTheme;
-
-			document.documentElement.classList.add(theme);
+			try {
+				const theme = localStorage.getItem('theme');
+				if (theme === 'light' || theme === 'dark') {
+					document.documentElement.dataset.theme = theme;
+				}
+			} catch {
+				// The browser preference still applies when storage is unavailable.
+			}
 		</script>
+		%sveltekit.head%
 	</head>
-	<body data-sveltekit-preload-data="hover">
+	<body>
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>

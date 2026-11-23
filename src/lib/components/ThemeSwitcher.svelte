@@ -7,7 +7,8 @@
 
 	let mode = $state<Theme>();
 	let preference: Theme | undefined;
-	let activeTransition: { animation: ViewTransition; target: Theme } | undefined;
+	let activeTransition:
+		{ animation: ViewTransition; target: Theme; scroll: number; width: number } | undefined;
 	const label = $derived(mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
 
 	beforeNavigate(stopReveal);
@@ -64,10 +65,8 @@
 		if (!current) return;
 
 		const next = current === 'dark' ? 'light' : 'dark';
-		const detailedMotion = matchMedia(
-			'(min-width: 48rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)'
-		).matches;
-		if (activeTransition || !detailedMotion || !document.startViewTransition) {
+		const animate = matchMedia('(prefers-reduced-motion: no-preference)').matches;
+		if (activeTransition || !animate || !document.startViewTransition) {
 			stopReveal();
 			setTheme(next);
 			return;
@@ -77,7 +76,11 @@
 		const x = left + width / 2;
 		const y = top + height / 2;
 		const origin = `${x}px ${y}px`;
-		const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)) + 1;
+		const radius =
+			Math.hypot(
+				Math.max(x, document.documentElement.clientWidth - x),
+				Math.max(y, document.documentElement.clientHeight - y, innerHeight - y)
+			) + 1;
 
 		const root = document.documentElement;
 		root.style.setProperty('--theme-origin', origin);
@@ -87,14 +90,24 @@
 		const animation = document.startViewTransition(() => {
 			if (activeTransition?.animation === animation) flushSync(() => setTheme(next));
 		});
-		activeTransition = { animation, target: next };
+		activeTransition = { animation, target: next, scroll: scrollY, width: innerWidth };
 		void animation.ready.catch(() => {});
 		const finish = () => clearReveal(animation);
 		void animation.finished.then(finish, finish);
 	}
+
+	function onScroll() {
+		if (activeTransition && Math.abs(scrollY - activeTransition.scroll) > 1) stopReveal();
+	}
+
+	function onResize() {
+		// Safari's toolbar can resize vertically without moving the page. That
+		// should not cancel a reveal immediately after a tap on the theme control.
+		if (activeTransition && innerWidth !== activeTransition.width) stopReveal();
+	}
 </script>
 
-<svelte:window onscroll={stopReveal} onresize={stopReveal} />
+<svelte:window onscroll={onScroll} onresize={onResize} />
 
 <button
 	class="header-control pressable"

@@ -6,12 +6,7 @@
 	import ProjectFallback from '#lib/components/ProjectFallback.svelte';
 	import ProjectItem from '#lib/components/ProjectItem.svelte';
 	import { githubProfile, githubRepositories } from '#lib/projects.js';
-	import {
-		easedScrollProgress,
-		heroGeometry,
-		heroScrollProgress,
-		visibleViewportHeight
-	} from '#lib/scroll.js';
+	import { easedScrollProgress, heroScrollProgress, visibleViewportHeight } from '#lib/scroll.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -19,6 +14,9 @@
 	let heroContent: HTMLDivElement;
 	let heroStage: HTMLDivElement;
 	let heroFrame: HTMLDivElement;
+	let heroPrint: HTMLDivElement;
+	let heroOutline: HTMLDivElement;
+	let scrollCue: HTMLButtonElement;
 	let valuesHeading: HTMLHeadingElement;
 	let valueStack: HTMLDivElement;
 
@@ -29,7 +27,15 @@
 		const motion = matchMedia('(prefers-reduced-motion: reduce)');
 		const listeners = new AbortController();
 		const root = document.documentElement;
+		const nativeScroll =
+			CSS.supports('animation-timeline: scroll(root block)') &&
+			CSS.supports('animation-range: 0px 1px');
 		let distance = 0;
+		let extra = 0;
+		let paintExtra = 0;
+		let gap = 0;
+		let inset = 0;
+		let radius = 0;
 		let frame = 0;
 		let measureFrame = 0;
 		let measuredWidth = 0;
@@ -40,9 +46,19 @@
 			const progress = distance ? easedScrollProgress(scrollY, distance) : 1;
 			if (progress === previousProgress) return;
 
-			// Keep scroll state local: changing an inherited property on <html>
-			// invalidates styles throughout every project card and decorative print.
-			hero.style.setProperty('--hero-scroll-progress', String(progress));
+			// Update only the moving surfaces in the fallback. An inherited scroll
+			// variable forces WebKit to resolve every gradient inside the artwork.
+			if (!nativeScroll && distance) {
+				heroStage.style.transform = `translateY(${Math.min(distance, Math.max(0, scrollY))}px)`;
+				heroFrame.style.clipPath = `inset(${gap * progress}px ${inset * progress}px ${(paintExtra + gap) * progress}px round ${radius * progress}px)`;
+				heroPrint.style.transform = `translateY(${-paintExtra * progress * 0.5}px)`;
+				heroContent.style.transform = `translateY(${extra * (1 - progress) * 0.5}px)`;
+				heroOutline.style.inset = `${gap * progress}px ${inset * progress}px ${gap * progress - paintExtra * (1 - progress)}px`;
+				heroOutline.style.borderRadius = `${radius * progress}px`;
+				heroOutline.style.opacity = String(progress);
+				scrollCue.style.transform = `translateY(${extra * (1 - progress)}px)`;
+			}
+			scrollCue.style.opacity = String(Math.min(1, Math.max(0, (0.4 - progress) * 5)));
 			heroScrollProgress.set(distance ? progress : undefined);
 			hero.toggleAttribute('data-scroll-cue', distance > 0 && progress < 0.4);
 			hero.toggleAttribute('data-hero-active', distance > 0 && progress < 1);
@@ -54,26 +70,35 @@
 			hero.setAttribute('data-hero-ready', '');
 			const top = hero.getBoundingClientRect().top + scrollY;
 			const viewportHeight = visibleViewportHeight(root.clientHeight, window.visualViewport);
-			const frameStyle = getComputedStyle(heroFrame);
-			const geometry = heroGeometry({
-				viewportWidth: root.clientWidth,
-				viewportHeight,
-				top,
-				stageHeight: heroStage.getBoundingClientRect().height,
-				frameWidth: Number.parseFloat(frameStyle.width),
-				frameHeight: Number.parseFloat(frameStyle.height)
-			});
-			const enabled = !motion.matches && geometry.height > heroContent.offsetHeight + 88;
+			const stageHeight = heroStage.getBoundingClientRect().height;
+			extra = viewportHeight - top - stageHeight;
+			const enabled = !motion.matches && viewportHeight - top > heroContent.offsetHeight + 88;
 			measuredWidth = root.clientWidth;
 			distance = enabled ? Math.min(320, Math.max(160, viewportHeight * 0.34)) : 0;
 			hero.style.setProperty('--hero-top', `${top}px`);
-			hero.style.setProperty('--hero-scale-x', String(geometry.scaleX));
-			hero.style.setProperty('--hero-scale-y', String(geometry.scaleY));
-			hero.style.setProperty('--hero-extra', `${geometry.extra}px`);
-			hero.style.setProperty('--hero-art-width', `${measuredWidth}px`);
-			hero.style.setProperty('--hero-art-height', `${geometry.height}px`);
+			hero.style.setProperty('--hero-extra', `${extra}px`);
+			hero.style.setProperty('--hero-stage-height', `${stageHeight}px`);
 			hero.style.setProperty('--hero-scroll-distance', `${distance}px`);
 			hero.toggleAttribute('data-scroll-hero', enabled);
+			hero.toggleAttribute('data-native-scroll', enabled && nativeScroll);
+
+			if (!nativeScroll) {
+				for (const element of [
+					heroStage,
+					heroFrame,
+					heroPrint,
+					heroContent,
+					heroOutline,
+					scrollCue
+				]) {
+					element.removeAttribute('style');
+				}
+				paintExtra = heroFrame.getBoundingClientRect().height - stageHeight;
+				const outlineStyle = getComputedStyle(heroOutline);
+				gap = Number.parseFloat(getComputedStyle(heroStage).paddingTop);
+				inset = Number.parseFloat(outlineStyle.left);
+				radius = Number.parseFloat(outlineStyle.borderTopLeftRadius);
+			}
 			previousProgress = -1;
 			cancelAnimationFrame(frame);
 			draw();
@@ -178,11 +203,11 @@
 <section class="hero" aria-labelledby="home-title" bind:this={hero}>
 	<div class="hero-stage" bind:this={heroStage}>
 		<div class="hero-frame" aria-hidden="true" bind:this={heroFrame}>
-			<div class="paper-print hero-print">
+			<div class="paper-print hero-print" bind:this={heroPrint}>
 				<PaperArtwork seed={data.headlineArtworkSeed} />
 			</div>
 		</div>
-		<div class="hero-outline" aria-hidden="true"></div>
+		<div class="hero-outline" aria-hidden="true" bind:this={heroOutline}></div>
 		<div class="shell hero-content" bind:this={heroContent}>
 			<h1 id="home-title">Random software you might enjoy</h1>
 			<p class="intro">We ❤️ software</p>
@@ -200,6 +225,7 @@
 			type="button"
 			aria-label="Scroll to what we care about"
 			onclick={scrollToValues}
+			bind:this={scrollCue}
 		>
 			<ArrowDown size={21} strokeWidth={1.8} aria-hidden="true" />
 		</button>
@@ -283,9 +309,9 @@
 	.hero {
 		--hero-gap: clamp(1.25rem, 3.3vw, 3rem);
 		--hero-inset: max(var(--gutter), calc((100% - 74rem) / 2));
-		--hero-expanded: calc(1 - var(--hero-scroll-progress, 1));
-		--hero-current-scale-x: calc(1 + (var(--hero-scale-x, 1) - 1) * var(--hero-expanded));
-		--hero-current-scale-y: calc(1 + (var(--hero-scale-y, 1) - 1) * var(--hero-expanded));
+		--hero-art-height: calc(100vh - var(--hero-top, var(--site-header-height)));
+		--hero-art-height: calc(100lvh - var(--hero-top, var(--site-header-height)));
+		--hero-paint-extra: calc(var(--hero-art-height) - var(--hero-stage-height));
 
 		text-align: center;
 	}
@@ -328,11 +354,6 @@
 		box-shadow: 0.2rem 0.25rem 0 var(--paper-edge);
 	}
 
-	.hero:global([data-scroll-hero]) .hero-stage {
-		position: sticky;
-		inset-block-start: var(--hero-top);
-	}
-
 	@media (prefers-reduced-motion: no-preference) {
 		/* Render the fullscreen opening before hydration as well. Measurement
 		   replaces this with the scrollable stage without hiding the page. */
@@ -354,43 +375,126 @@
 			border-color: transparent;
 			box-shadow: none;
 		}
+
+		.hero:not(:global([data-hero-ready])) .hero-frame {
+			height: var(--hero-art-height);
+		}
 	}
 
 	.hero:global([data-scroll-hero]) .hero-frame {
-		border-radius: calc(var(--paper-radius) * var(--hero-scroll-progress));
-		transform-origin: center top;
-		transform: translateY(calc(-1 * var(--hero-gap) * var(--hero-expanded)))
-			scale(var(--hero-current-scale-x), var(--hero-current-scale-y));
-	}
-
-	/* Keep the stroke outside the scaled clipping layer. A transparent border
-	   still takes up space and exposes enlarged strips of the paper beneath it. */
-	.hero:global([data-scroll-hero]) .hero-outline {
-		inset-block-start: calc(var(--hero-gap) * var(--hero-scroll-progress));
-		inset-block-end: calc(
-			var(--hero-gap) * var(--hero-scroll-progress) - var(--hero-extra) * var(--hero-expanded)
-		);
-		inset-inline: calc(var(--hero-inset) * var(--hero-scroll-progress));
-		border-color: color-mix(
-			in srgb,
-			var(--line-strong) calc(100% * var(--hero-scroll-progress)),
-			transparent
-		);
-		border-radius: calc(var(--paper-radius) * var(--hero-scroll-progress));
-		box-shadow: 0.2rem 0.25rem 0
-			color-mix(in srgb, var(--paper-edge) calc(100% * var(--hero-scroll-progress)), transparent);
-	}
-
-	.hero:global([data-scroll-hero]) .hero-content {
-		transform: translateY(calc(var(--hero-extra) * 0.5 * var(--hero-expanded)));
+		inset: 0 0 auto;
+		height: var(--hero-art-height);
+		border-radius: 0;
 	}
 
 	.hero:global([data-scroll-hero]) .hero-track {
 		height: var(--hero-scroll-distance);
 	}
 
-	.hero:global([data-hero-active]) :is(.hero-frame, .hero-print, .hero-content) {
+	.hero:global([data-hero-active]) :is(.hero-stage, .hero-print, .hero-content) {
 		will-change: transform;
+	}
+
+	.hero:global([data-hero-active]) .hero-frame {
+		will-change: clip-path;
+	}
+
+	/* A normal-flow surface can paint underneath Safari's translucent toolbar.
+	   Translate it with scroll instead of pinning/clipping it to the visual viewport.
+	   Native timelines also let WebKit compose motion without waiting for JavaScript. */
+	.hero:global([data-native-scroll])
+		:is(.hero-stage, .hero-frame, .hero-print, .hero-content, .hero-outline, .scroll-cue) {
+		animation-duration: 1s;
+		animation-timing-function: cubic-bezier(0.333333, 0.666667, 0.666667, 1);
+		animation-fill-mode: both;
+		animation-timeline: scroll(root block);
+		animation-range: 0px var(--hero-scroll-distance);
+	}
+
+	.hero:global([data-native-scroll]) .hero-stage {
+		animation-name: hold-hero;
+		animation-timing-function: linear;
+	}
+
+	.hero:global([data-native-scroll]) .hero-frame {
+		animation-name: contract-hero;
+	}
+
+	.hero:global([data-native-scroll]) .hero-print {
+		animation-name: center-print;
+	}
+
+	.hero:global([data-native-scroll]) .hero-content {
+		animation-name: center-copy;
+	}
+
+	.hero:global([data-native-scroll]) .hero-outline {
+		animation-name: outline-hero;
+	}
+
+	.hero:global([data-native-scroll]) .scroll-cue {
+		animation-name: center-cue;
+	}
+
+	@keyframes hold-hero {
+		from {
+			transform: translateY(0);
+		}
+		to {
+			transform: translateY(var(--hero-scroll-distance));
+		}
+	}
+
+	@keyframes contract-hero {
+		from {
+			clip-path: inset(0 0 0 round 0);
+		}
+		to {
+			clip-path: inset(
+				var(--hero-gap) var(--hero-inset) calc(var(--hero-paint-extra) + var(--hero-gap)) round
+					var(--paper-radius)
+			);
+		}
+	}
+
+	@keyframes center-print {
+		from {
+			transform: translateY(0);
+		}
+		to {
+			transform: translateY(calc(var(--hero-paint-extra) * -0.5));
+		}
+	}
+
+	@keyframes center-copy {
+		from {
+			transform: translateY(calc(var(--hero-extra) * 0.5));
+		}
+		to {
+			transform: translateY(0);
+		}
+	}
+
+	@keyframes outline-hero {
+		from {
+			inset: 0 0 calc(-1 * var(--hero-paint-extra));
+			border-radius: 0;
+			opacity: 0;
+		}
+		to {
+			inset: var(--hero-gap) var(--hero-inset);
+			border-radius: var(--paper-radius);
+			opacity: 1;
+		}
+	}
+
+	@keyframes center-cue {
+		from {
+			transform: translateY(var(--hero-extra));
+		}
+		to {
+			transform: translateY(0);
+		}
 	}
 
 	.scroll-cue {
@@ -398,8 +502,6 @@
 		inset-block-end: calc(var(--hero-gap) + 0.75rem + env(safe-area-inset-bottom, 0px));
 		inset-inline-start: calc(50% - var(--header-control-size) / 2);
 		display: none;
-		opacity: clamp(0, calc((var(--hero-expanded) - 0.6) * 5), 1);
-		transform: translateY(calc(var(--hero-extra, 0px) * var(--hero-expanded)));
 	}
 
 	.hero:global([data-scroll-cue]) .scroll-cue {
@@ -439,15 +541,8 @@
 	}
 
 	.hero:global([data-scroll-hero]) .hero-print {
-		inset: auto;
-		top: 50%;
-		left: 50%;
-		width: var(--hero-art-width);
+		inset: 0 0 auto;
 		height: var(--hero-art-height);
-		/* The frame scales, while its fixed-size print counter-scales. The fine
-		   gradients keep their proportions and do not resize/repaint each frame. */
-		transform: translate(-50%, -50%)
-			scale(calc(1 / var(--hero-current-scale-x)), calc(1 / var(--hero-current-scale-y)));
 	}
 
 	.projects {

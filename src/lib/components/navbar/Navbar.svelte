@@ -239,6 +239,16 @@
 		}
 	}
 
+	@media (width < 48rem), (pointer: coarse) {
+		.header-bar::before {
+			/* Keep the paper and floating morph without continuously filtering
+			   every pixel scrolling beneath the header on a phone. */
+			background-color: var(--card);
+			-webkit-backdrop-filter: none;
+			backdrop-filter: none;
+		}
+	}
+
 	.header-inner {
 		display: grid;
 		max-width: 74rem;

@@ -21,27 +21,3 @@ export function visibleViewportHeight(
 		? viewport.height
 		: layoutHeight;
 }
-
-export function heroGeometry({
-	viewportWidth,
-	viewportHeight,
-	top,
-	stageHeight,
-	frameWidth,
-	frameHeight
-}: {
-	viewportWidth: number;
-	viewportHeight: number;
-	top: number;
-	stageHeight: number;
-	frameWidth: number;
-	frameHeight: number;
-}) {
-	const height = Math.max(0, viewportHeight - top);
-	return {
-		height,
-		scaleX: frameWidth > 0 ? viewportWidth / frameWidth : 1,
-		scaleY: frameHeight > 0 ? height / frameHeight : 1,
-		extra: height - stageHeight
-	};
-}

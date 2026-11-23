@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { ArrowDown, ArrowRight, CodeXml, Github, ShieldCheck, Zap } from 'lucide-svelte';
+	import { ArrowDown, ArrowRight, Github } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import PaperArtwork from '#lib/components/PaperArtwork.svelte';
 	import ProjectFallback from '#lib/components/ProjectFallback.svelte';
@@ -14,6 +14,7 @@
 	let heroContent: HTMLDivElement;
 	let heroTrack: HTMLDivElement;
 	let valuesHeading: HTMLHeadingElement;
+	let valueStack: HTMLDivElement;
 	let stopCueScroll: (() => void) | undefined;
 
 	const description =
@@ -71,6 +72,42 @@
 			stopCueScroll?.();
 			root.style.removeProperty('--hero-scroll-progress');
 		};
+	});
+
+	onMount(() => {
+		const panels = [...valueStack.querySelectorAll<HTMLElement>('.value')];
+
+		function clipArtwork() {
+			const stack = valueStack.getBoundingClientRect();
+			const path = panels
+				.map((panel) => {
+					const bounds = panel.getBoundingClientRect();
+					const style = getComputedStyle(panel);
+					const border = Number.parseFloat(style.borderTopWidth);
+					const radius = Math.max(0, Number.parseFloat(style.borderTopLeftRadius) - border);
+					const left = bounds.left - stack.left + border;
+					const right = bounds.right - stack.left - border;
+					const top = bounds.top - stack.top + border;
+					const bottom = bounds.bottom - stack.top - border;
+					const corner = `A ${radius} ${radius} 0 0 1`;
+
+					return (
+						`M ${left + radius} ${top} H ${right - radius} ${corner} ${right} ${top + radius} ` +
+						`V ${bottom - radius} ${corner} ${right - radius} ${bottom} ` +
+						`H ${left + radius} ${corner} ${left} ${bottom - radius} ` +
+						`V ${top + radius} ${corner} ${left + radius} ${top} Z`
+					);
+				})
+				.join(' ');
+
+			valueStack.style.setProperty('--values-clip', `path("${path}")`);
+		}
+
+		const observer = new ResizeObserver(clipArtwork);
+		observer.observe(valueStack);
+		for (const panel of panels) observer.observe(panel);
+		clipArtwork();
+		return () => observer.disconnect();
 	});
 
 	function scrollToValues() {
@@ -166,18 +203,13 @@
 				About us <ArrowRight size={17} strokeWidth={1.8} aria-hidden="true" />
 			</a>
 		</div>
-		<div class="value-stack">
+		<div class="value-stack" bind:this={valueStack}>
 			<div class="paper-print values-print" aria-hidden="true">
 				<PaperArtwork layout="panels" seed={data.valuesArtworkSeed} />
 			</div>
 			<section class="value paper-panel" aria-labelledby="value-open-source">
 				<div class="value-copy">
-					<h3 id="value-open-source">
-						<span class="value-icon" aria-hidden="true">
-							<CodeXml size={21} strokeWidth={1.7} />
-						</span>
-						Open source
-					</h3>
+					<h3 id="value-open-source">Open source</h3>
 					<p>
 						We like making software people can use, change, and share, even in their own commercial
 						projects. If you have an idea or a fix, we’d love your help.
@@ -186,12 +218,7 @@
 			</section>
 			<section class="value paper-panel" aria-labelledby="value-security">
 				<div class="value-copy">
-					<h3 id="value-security">
-						<span class="value-icon" aria-hidden="true">
-							<ShieldCheck size={21} strokeWidth={1.7} />
-						</span>
-						Security
-					</h3>
+					<h3 id="value-security">Security</h3>
 					<p>
 						Good software should take security seriously. If you’ve found a vulnerability or have a
 						concern, please <a class="prose-link" href={resolve('/contact')}>
@@ -202,10 +229,7 @@
 			</section>
 			<section class="value paper-panel" aria-labelledby="value-performance">
 				<div class="value-copy">
-					<h3 id="value-performance">
-						<span class="value-icon" aria-hidden="true"><Zap size={21} strokeWidth={1.7} /></span>
-						Performance
-					</h3>
+					<h3 id="value-performance">Performance</h3>
 					<p>
 						Slow software gets in the way. We think about speed from the first build and keep
 						looking for places to make things faster.
@@ -393,21 +417,7 @@
 		padding: clamp(1.125rem, 3vw, 2.375rem);
 	}
 
-	.value-icon {
-		display: grid;
-		width: 2.5rem;
-		height: 2.5rem;
-		flex-shrink: 0;
-		place-items: center;
-		border: 1px solid var(--line-strong);
-		border-radius: calc(var(--paper-radius) - 2px);
-		background: var(--tint);
-	}
-
 	.value h3 {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
 		font-size: clamp(1.375rem, 3vw, 2.25rem);
 		letter-spacing: -0.02em;
 	}
@@ -437,6 +447,7 @@
 	}
 
 	.values-print {
+		clip-path: var(--values-clip, inset(50%));
 		mask-image: linear-gradient(to right, transparent 30%, rgb(0 0 0 / 36%) 49%, #000 80%);
 	}
 

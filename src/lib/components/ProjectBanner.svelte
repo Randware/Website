@@ -88,8 +88,15 @@
 
 	.plate[data-shape='1'] {
 		border-radius: 0.75rem;
-		background: var(--print-light);
-		box-shadow: inset 0 0 0 4px var(--print-mid);
+		background: none;
+	}
+
+	.plate[data-shape='1']::before {
+		position: absolute;
+		inset: 0.375rem;
+		border: 1px solid var(--print-mid);
+		border-radius: 0.375rem;
+		content: '';
 	}
 
 	.plate[data-shape='2'] {

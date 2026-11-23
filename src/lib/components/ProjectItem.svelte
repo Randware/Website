@@ -186,7 +186,7 @@
 
 	@media (prefers-reduced-motion: no-preference) {
 		.project:has(.project-link:focus-visible) {
-			--project-plate-scale: 1.16;
+			--project-plate-spread: 1;
 		}
 
 		.project-arrow {
@@ -199,7 +199,7 @@
 
 		@media (hover: hover) {
 			.project:hover {
-				--project-plate-scale: 1.16;
+				--project-plate-spread: 1;
 			}
 
 			.project:has(.project-link:hover) .project-arrow {

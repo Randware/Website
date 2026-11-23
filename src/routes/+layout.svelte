@@ -1,10 +1,48 @@
 <script lang="ts">
 	import Footer from '#lib/components/footer/Footer.svelte';
 	import Navbar from '#lib/components/navbar/Navbar.svelte';
+	import { onMount } from 'svelte';
 	import '../app.css';
 
 	let { children } = $props();
+	let site: HTMLDivElement;
 	let pressed: { element: HTMLElement; pointerId: number } | undefined;
+
+	onMount(() => {
+		const root = document.documentElement;
+		if (root.dataset.pageIntro === 'static') {
+			const frame = requestAnimationFrame(() => delete root.dataset.pageIntro);
+			return () => cancelAnimationFrame(frame);
+		}
+		if (root.dataset.pageIntro !== 'pending') return;
+		root.dataset.pageIntro = 'preparing';
+		const page = site;
+		page.addEventListener('animationcancel', finishPageFade);
+
+		let frame = 0;
+		let disposed = false;
+		void document.fonts.ready.then(() => {
+			if (disposed) return;
+			// Let the hero's resize and scroll measurements settle with the loaded fonts.
+			frame = requestAnimationFrame(() => {
+				frame = requestAnimationFrame(() => {
+					if (matchMedia('(prefers-reduced-motion: reduce)').matches) delete root.dataset.pageIntro;
+					else root.dataset.pageIntro = 'ready';
+				});
+			});
+		});
+
+		return () => {
+			disposed = true;
+			cancelAnimationFrame(frame);
+			page.removeEventListener('animationcancel', finishPageFade);
+			delete root.dataset.pageIntro;
+		};
+	});
+
+	function finishPageFade(event: AnimationEvent) {
+		if (event.target === event.currentTarget) delete document.documentElement.dataset.pageIntro;
+	}
 
 	function startTouchPress(event: PointerEvent) {
 		if (!event.isPrimary || event.pointerType !== 'touch' || event.button !== 0) return;
@@ -36,7 +74,7 @@
 	onblur={clearTouchPress}
 />
 
-<div class="site" id="page-top">
+<div class="site" id="page-top" bind:this={site} onanimationend={finishPageFade}>
 	<a class="skip-link" href="#main-content">Skip to content</a>
 	<Navbar />
 
@@ -53,6 +91,22 @@
 		display: flex;
 		min-height: 100vh;
 		flex-direction: column;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		:global(:root[data-page-intro='ready']) .site {
+			animation: page-fade-in 420ms ease-out;
+		}
+	}
+
+	@keyframes page-fade-in {
+		from {
+			opacity: 0;
+		}
+
+		to {
+			opacity: 1;
+		}
 	}
 
 	main {

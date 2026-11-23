@@ -1,18 +1,21 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-
 	const patterns = ['contours', 'rays', 'hatch', 'pinholes', 'frames', 'rules'] as const;
 	const shapes = ['arch', 'ellipse', 'leaf', 'capsule', 'sheet'] as const;
 
-	let seed = $state<number>();
-	const artwork = $derived(seed === undefined ? undefined : composePrint(seed));
+	type Layout = 'hero' | 'panels';
+	type Placement = {
+		x: number;
+		y: number;
+		width: number;
+		minWidth: number;
+		height?: number;
+		angle?: number;
+	};
 
-	onMount(() => {
-		const [nonce] = crypto.getRandomValues(new Uint32Array(1));
-		seed = (Date.now() ^ nonce) >>> 0;
-	});
+	let { seed, layout = 'hero' }: { seed: number; layout?: Layout } = $props();
+	const artwork = $derived(composePrint(seed, layout));
 
-	function composePrint(seed: number) {
+	function composePrint(seed: number, layout: Layout) {
 		let state = seed;
 
 		function range(min: number, max: number) {
@@ -26,8 +29,7 @@
 		const availablePatterns = [...patterns];
 		const availableShapes = [...shapes, shapes[Math.floor(range(0, shapes.length))]];
 
-		// Keep the large prints near the edges and balance each with a smaller impression.
-		const slots = [
+		const heroSlots = [
 			{ x: range(5, 17), y: leftHeight, width: range(30, 43), minWidth: 148 },
 			{ x: range(83, 96), y: rightHeight, width: range(30, 43), minWidth: 148 },
 			{ x: range(17, 30), y: rightHeight, width: range(18, 29), minWidth: 96 },
@@ -35,18 +37,37 @@
 			{ x: range(2, 12), y: range(34, 68), width: range(8, 14), minWidth: 48 },
 			{ x: range(88, 98), y: range(34, 68), width: range(8, 14), minWidth: 48 }
 		];
+		const slots: Placement[] =
+			layout === 'panels'
+				? [
+						// A long print carries the same linework through the whole stack.
+						{
+							x: range(78, 88),
+							y: range(47, 53),
+							width: range(30, 40),
+							minWidth: 148,
+							height: range(115, 137),
+							angle: range(-10, 8)
+						},
+						{ x: range(72, 80), y: range(12, 25), width: range(24, 33), minWidth: 116 },
+						{ x: range(89, 97), y: range(29, 38), width: range(17, 23), minWidth: 90 },
+						{ x: range(73, 82), y: range(47, 57), width: range(22, 30), minWidth: 95 },
+						{ x: range(90, 98), y: range(66, 77), width: range(20, 27), minWidth: 88 },
+						{ x: range(68, 81), y: range(82, 95), width: range(22, 30), minWidth: 104 }
+					]
+				: heroSlots;
 
 		return {
 			band: {
-				y: range(0, 1) < 0.5 ? range(9, 22) : range(78, 91),
-				angle: alignment + range(-5, 5),
+				y: layout === 'panels' ? 50 : range(0, 1) < 0.5 ? range(9, 22) : range(78, 91),
+				angle: layout === 'panels' ? range(-6, 7) : alignment + range(-5, 5),
 				spacing: range(10, 17)
 			},
 			plates: slots.map((slot) => ({
 				...slot,
 				pattern: availablePatterns.splice(Math.floor(range(0, availablePatterns.length)), 1)[0],
 				shape: availableShapes.splice(Math.floor(range(0, availableShapes.length)), 1)[0],
-				angle: alignment + range(-32, 32),
+				angle: slot.angle ?? alignment + range(-32, 32),
 				ratio: range(0.84, 1.45),
 				spacing: range(5, 10),
 				rayStep: range(3.5, 8),
@@ -63,39 +84,38 @@
 	}
 </script>
 
-{#if artwork}
-	<div class="artwork" data-seed={seed} aria-hidden="true">
+<div class="artwork" data-layout={layout} data-seed={seed} aria-hidden="true">
+	<div
+		class="band"
+		style:--y="{artwork.band.y}%"
+		style:--angle="{artwork.band.angle}deg"
+		style:--spacing="{artwork.band.spacing}px"
+	></div>
+	{#each artwork.plates as plate (plate.pattern)}
 		<div
-			class="band"
-			style:--y="{artwork.band.y}%"
-			style:--angle="{artwork.band.angle}deg"
-			style:--spacing="{artwork.band.spacing}px"
+			class="plate"
+			data-pattern={plate.pattern}
+			data-shape={plate.shape}
+			style:--x="{plate.x}%"
+			style:--y="{plate.y}%"
+			style:--width="{plate.width}%"
+			style:--min-width="{plate.minWidth}px"
+			style:--height={plate.height === undefined ? undefined : `${plate.height}%`}
+			style:--ratio={plate.ratio}
+			style:--angle="{plate.angle}deg"
+			style:--spacing="{plate.spacing}px"
+			style:--ray-step="{plate.rayStep}deg"
+			style:--focus-x="{plate.focusX}%"
+			style:--focus-y="{plate.focusY}%"
+			style:--ink-strength={plate.strength}
+			style:--drift-x="{plate.driftX}px"
+			style:--drift-y="{plate.driftY}px"
+			style:--turn="{plate.turn}deg"
+			style:--duration="{plate.duration}s"
+			style:--delay="{plate.delay}s"
 		></div>
-		{#each artwork.plates as plate (plate.pattern)}
-			<div
-				class="plate"
-				data-pattern={plate.pattern}
-				data-shape={plate.shape}
-				style:--x="{plate.x}%"
-				style:--y="{plate.y}%"
-				style:--width="{plate.width}%"
-				style:--min-width="{plate.minWidth}px"
-				style:--ratio={plate.ratio}
-				style:--angle="{plate.angle}deg"
-				style:--spacing="{plate.spacing}px"
-				style:--ray-step="{plate.rayStep}deg"
-				style:--focus-x="{plate.focusX}%"
-				style:--focus-y="{plate.focusY}%"
-				style:--ink-strength={plate.strength}
-				style:--drift-x="{plate.driftX}px"
-				style:--drift-y="{plate.driftY}px"
-				style:--turn="{plate.turn}deg"
-				style:--duration="{plate.duration}s"
-				style:--delay="{plate.delay}s"
-			></div>
-		{/each}
-	</div>
-{/if}
+	{/each}
+</div>
 
 <style>
 	.artwork {
@@ -127,8 +147,17 @@
 			repeating-linear-gradient(90deg, var(--faint-print) 0 1px, transparent 1px var(--spacing));
 	}
 
+	.artwork[data-layout='panels'] .band {
+		left: 86%;
+		width: clamp(2.25rem, 7%, 5.75rem);
+		height: 115%;
+		border: 1px solid var(--faint-print);
+		background: repeating-linear-gradient(var(--faint-print) 0 1px, transparent 1px var(--spacing));
+	}
+
 	.plate {
 		width: clamp(var(--min-width), var(--width), 31rem);
+		height: var(--height, auto);
 		aspect-ratio: var(--ratio);
 		border: 1px solid var(--print-ink);
 		border-radius: 0.5rem;
@@ -201,7 +230,7 @@
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
-		.plate {
+		.artwork[data-layout='hero'] .plate {
 			animation: drift var(--duration) ease-in-out var(--delay) infinite;
 		}
 	}

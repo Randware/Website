@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { ArrowDown, ArrowRight, CodeXml, Github, ShieldCheck, Zap } from 'lucide-svelte';
 	import { onMount } from 'svelte';
-	import HeroArtwork from '#lib/components/HeroArtwork.svelte';
+	import PaperArtwork from '#lib/components/PaperArtwork.svelte';
 	import ProjectFallback from '#lib/components/ProjectFallback.svelte';
 	import ProjectItem from '#lib/components/ProjectItem.svelte';
 	import { githubProfile, githubRepositories } from '#lib/projects.js';
@@ -14,6 +14,7 @@
 	let heroContent: HTMLDivElement;
 	let heroTrack: HTMLDivElement;
 	let valuesHeading: HTMLHeadingElement;
+	let stopCueScroll: (() => void) | undefined;
 
 	const description =
 		'We’re a group of friends who like making open-source software. Take a look at what we’ve built.';
@@ -22,6 +23,7 @@
 		const motion = matchMedia('(prefers-reduced-motion: reduce)');
 		const listeners = new AbortController();
 		const root = document.documentElement;
+		const introExpired = root.dataset.pageIntro === 'static';
 		let distance = 0;
 		let frame = 0;
 		let previousProgress = -1;
@@ -42,7 +44,7 @@
 			const room = root.clientHeight - top;
 			hero.toggleAttribute(
 				'data-scroll-hero',
-				!motion.matches && room > heroContent.offsetHeight + 88
+				!introExpired && !motion.matches && room > heroContent.offsetHeight + 88
 			);
 			hero.style.setProperty('--hero-top', `${top}px`);
 			distance = heroTrack.offsetHeight;
@@ -66,13 +68,53 @@
 			listeners.abort();
 			observer.disconnect();
 			cancelAnimationFrame(frame);
+			stopCueScroll?.();
 			root.style.removeProperty('--hero-scroll-progress');
 		};
 	});
 
 	function scrollToValues() {
+		stopCueScroll?.();
 		valuesHeading.focus({ preventScroll: true });
-		valuesHeading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+		const motion = matchMedia('(prefers-reduced-motion: reduce)');
+		if (motion.matches) {
+			valuesHeading.scrollIntoView({ behavior: 'instant', block: 'start' });
+			return;
+		}
+
+		const root = document.documentElement;
+		const start = scrollY;
+		const padding = Number.parseFloat(getComputedStyle(root).scrollPaddingTop) || 0;
+		const target = start + valuesHeading.getBoundingClientRect().top - padding;
+		const destination = Math.max(0, Math.min(target, root.scrollHeight - root.clientHeight));
+		const travel = destination - start;
+		const started = performance.now();
+		const listeners = new AbortController();
+		let frame = 0;
+
+		function stop() {
+			cancelAnimationFrame(frame);
+			listeners.abort();
+			stopCueScroll = undefined;
+		}
+
+		function advance(time: number) {
+			const seconds = Math.max(0, time - started) / 1000;
+			const remaining = travel * Math.exp(-6 * seconds);
+			const atRest = Math.abs(remaining) <= 1.5;
+			window.scrollTo({ top: atRest ? destination : destination - remaining, behavior: 'instant' });
+			if (!atRest) frame = requestAnimationFrame(advance);
+			else stop();
+		}
+
+		const { signal } = listeners;
+		for (const event of ['wheel', 'pointerdown', 'keydown', 'resize']) {
+			window.addEventListener(event, stop, { passive: true, signal });
+		}
+		motion.addEventListener('change', stop, { signal });
+		stopCueScroll = stop;
+		frame = requestAnimationFrame(advance);
 	}
 </script>
 
@@ -87,7 +129,7 @@
 	<div class="hero-stage">
 		<div class="hero-frame paper-panel" aria-hidden="true">
 			<div class="paper-print hero-print">
-				<HeroArtwork />
+				<PaperArtwork seed={data.headlineArtworkSeed} />
 			</div>
 		</div>
 		<div class="shell hero-content" bind:this={heroContent}>
@@ -124,49 +166,53 @@
 				About us <ArrowRight size={17} strokeWidth={1.8} aria-hidden="true" />
 			</a>
 		</div>
-		<section class="value paper-panel" aria-labelledby="value-open-source">
-			<div class="value-copy">
-				<h3 id="value-open-source">
-					<span class="value-icon" aria-hidden="true"><CodeXml size={21} strokeWidth={1.7} /></span>
-					Open source
-				</h3>
-				<p>
-					We like making software people can use, change, and share, even in their own commercial
-					projects. If you have an idea or a fix, we’d love your help.
-				</p>
+		<div class="value-stack">
+			<div class="paper-print values-print" aria-hidden="true">
+				<PaperArtwork layout="panels" seed={data.valuesArtworkSeed} />
 			</div>
-			<div class="paper-print value-print" data-motif="circles" aria-hidden="true"></div>
-		</section>
-		<section class="value paper-panel" aria-labelledby="value-security">
-			<div class="value-copy">
-				<h3 id="value-security">
-					<span class="value-icon" aria-hidden="true">
-						<ShieldCheck size={21} strokeWidth={1.7} />
-					</span>
-					Security
-				</h3>
-				<p>
-					Good software should take security seriously. If you’ve found a vulnerability or have a
-					concern, please <a class="prose-link" href={resolve('/contact')}>
-						get in touch privately
-					</a> so we can look into it.
-				</p>
-			</div>
-			<div class="paper-print value-print" data-motif="frames" aria-hidden="true"></div>
-		</section>
-		<section class="value paper-panel" aria-labelledby="value-performance">
-			<div class="value-copy">
-				<h3 id="value-performance">
-					<span class="value-icon" aria-hidden="true"><Zap size={21} strokeWidth={1.7} /></span>
-					Performance
-				</h3>
-				<p>
-					Slow software gets in the way. We think about speed from the first build and keep looking
-					for places to make things faster.
-				</p>
-			</div>
-			<div class="paper-print value-print" data-motif="tracks" aria-hidden="true"></div>
-		</section>
+			<section class="value paper-panel" aria-labelledby="value-open-source">
+				<div class="value-copy">
+					<h3 id="value-open-source">
+						<span class="value-icon" aria-hidden="true">
+							<CodeXml size={21} strokeWidth={1.7} />
+						</span>
+						Open source
+					</h3>
+					<p>
+						We like making software people can use, change, and share, even in their own commercial
+						projects. If you have an idea or a fix, we’d love your help.
+					</p>
+				</div>
+			</section>
+			<section class="value paper-panel" aria-labelledby="value-security">
+				<div class="value-copy">
+					<h3 id="value-security">
+						<span class="value-icon" aria-hidden="true">
+							<ShieldCheck size={21} strokeWidth={1.7} />
+						</span>
+						Security
+					</h3>
+					<p>
+						Good software should take security seriously. If you’ve found a vulnerability or have a
+						concern, please <a class="prose-link" href={resolve('/contact')}>
+							get in touch privately
+						</a> so we can look into it.
+					</p>
+				</div>
+			</section>
+			<section class="value paper-panel" aria-labelledby="value-performance">
+				<div class="value-copy">
+					<h3 id="value-performance">
+						<span class="value-icon" aria-hidden="true"><Zap size={21} strokeWidth={1.7} /></span>
+						Performance
+					</h3>
+					<p>
+						Slow software gets in the way. We think about speed from the first build and keep
+						looking for places to make things faster.
+					</p>
+				</div>
+			</section>
+		</div>
 	</div>
 </section>
 
@@ -205,7 +251,7 @@
 	}
 
 	.hero-stage,
-	.value {
+	.value-stack {
 		position: relative;
 		isolation: isolate;
 	}
@@ -328,8 +374,18 @@
 		background: var(--wash);
 	}
 
-	.value + .value {
-		margin-top: clamp(0.875rem, 1.75vw, 1.375rem);
+	.value-stack {
+		display: grid;
+		gap: clamp(0.875rem, 1.75vw, 1.375rem);
+	}
+
+	.value {
+		background: linear-gradient(
+			100deg,
+			var(--card) 30%,
+			color-mix(in srgb, var(--card) 58%, transparent) 56%,
+			transparent 87%
+		);
 	}
 
 	.value-copy {
@@ -380,75 +436,8 @@
 		pointer-events: none;
 	}
 
-	.value-print {
-		--print-center: 50%;
-
-		mask-image: linear-gradient(
-			105deg,
-			transparent 6%,
-			rgb(0 0 0 / 16%) 33%,
-			rgb(0 0 0 / 52%) 58%,
-			#000 86%
-		);
-	}
-
-	.value-print::before,
-	.value-print::after {
-		position: absolute;
-		inset-block-start: var(--print-center);
-		width: clamp(8rem, 29%, 21rem);
-		aspect-ratio: 1;
-		border: 1px solid var(--print-ink);
-		content: '';
-	}
-
-	.value-print::before {
-		inset-inline-start: 43%;
-		translate: 0 -58%;
-	}
-
-	.value-print::after {
-		inset-inline-start: 66%;
-		translate: 0 -43%;
-	}
-
-	.value-print[data-motif='circles']::before,
-	.value-print[data-motif='circles']::after {
-		border-radius: 50%;
-		background: repeating-radial-gradient(circle, var(--print-ink) 0 1px, transparent 1px 8px);
-	}
-
-	.value-print[data-motif='frames']::before,
-	.value-print[data-motif='frames']::after {
-		aspect-ratio: 1.25;
-		border-radius: 0.5rem;
-		box-shadow:
-			inset 0 0 0 6px var(--wash),
-			inset 0 0 0 7px var(--print-ink),
-			inset 0 0 0 15px var(--wash),
-			inset 0 0 0 16px var(--print-ink);
-	}
-
-	.value-print[data-motif='frames']::before {
-		rotate: -15deg;
-	}
-
-	.value-print[data-motif='frames']::after {
-		rotate: 12deg;
-	}
-
-	.value-print[data-motif='tracks']::before,
-	.value-print[data-motif='tracks']::after {
-		width: clamp(10rem, 38%, 27rem);
-		aspect-ratio: 3.2;
-		border-radius: 100vmax;
-		background: repeating-linear-gradient(var(--print-ink) 0 1px, transparent 1px 6px);
-		rotate: -20deg;
-	}
-
-	.value-print[data-motif='tracks']::after {
-		inset-block-start: calc(var(--print-center) + 1.25rem);
-		inset-inline-start: 61%;
+	.values-print {
+		mask-image: linear-gradient(to right, transparent 30%, rgb(0 0 0 / 36%) 49%, #000 80%);
 	}
 
 	@media (width < 40rem) {
@@ -456,15 +445,17 @@
 			max-inline-size: none;
 		}
 
-		.value-print {
-			--print-center: 2.5rem;
-
-			mask-image: radial-gradient(
-				ellipse 85% 7.5rem at 100% 0%,
-				rgb(0 0 0 / 58%),
-				rgb(0 0 0 / 26%) 53%,
-				transparent 100%
+		.value {
+			background: linear-gradient(
+				to right,
+				var(--card) 26%,
+				color-mix(in srgb, var(--card) 73%, transparent) 70%,
+				color-mix(in srgb, var(--card) 38%, transparent)
 			);
+		}
+
+		.values-print {
+			mask-image: linear-gradient(to right, transparent 38%, rgb(0 0 0 / 72%) 100%);
 		}
 	}
 

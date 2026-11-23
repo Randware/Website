@@ -14,14 +14,31 @@
 			href="%sveltekit.assets%/favicon-light.svg"
 			media="(prefers-color-scheme: dark)"
 		/>
+		<style>
+			@media (prefers-reduced-motion: no-preference) {
+				:root[data-page-intro='pending'] #page-top,
+				:root[data-page-intro='preparing'] #page-top {
+					opacity: 0;
+				}
+			}
+		</style>
 		<script>
+			const root = document.documentElement;
 			try {
 				const theme = localStorage.getItem('theme');
 				if (theme === 'light' || theme === 'dark') {
-					document.documentElement.dataset.theme = theme;
+					root.dataset.theme = theme;
 				}
 			} catch {
 				// The browser preference still applies when storage is unavailable.
+			}
+
+			if (matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+				root.dataset.pageIntro = 'pending';
+				setTimeout(() => {
+					// Keep the server-rendered page available if the app cannot start.
+					if (root.dataset.pageIntro === 'pending') root.dataset.pageIntro = 'static';
+				}, 2500);
 			}
 		</script>
 		%sveltekit.head%

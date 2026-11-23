@@ -6,12 +6,16 @@
 	const plates = $derived(
 		Array.from({ length: 3 }, (_, index) => {
 			const bits = seed >>> (index * 8);
+			const x = 36 + index * 20 + ((bits >>> 2) % 15) - 7;
+			const y = 30 + ((bits >>> 7) % 43);
 			return {
 				shape: bits % 4,
-				x: 36 + index * 20 + ((bits >>> 2) % 15) - 7,
-				y: 30 + ((bits >>> 7) % 43),
+				x,
+				y,
 				size: 23 + ((bits >>> 12) % 16),
-				angle: ((bits >>> 16) % 61) - 30
+				angle: ((bits >>> 16) % 61) - 30,
+				spreadX: (x - 56) * 0.88,
+				spreadY: (y - 50) * 0.48 + (y < 50 ? -5 : 5)
 			};
 		})
 	);
@@ -31,6 +35,8 @@
 			style:--y="{plate.y}%"
 			style:--size="{plate.size}%"
 			style:--angle="{plate.angle}deg"
+			style:--spread-x="{plate.spreadX}px"
+			style:--spread-y="{plate.spreadY}px"
 		></span>
 	{/each}
 </div>
@@ -63,6 +69,8 @@
 	}
 
 	.plate {
+		--spread: var(--project-plate-spread, 0);
+
 		position: absolute;
 		top: var(--y);
 		left: var(--x);
@@ -71,7 +79,11 @@
 		border: 1px solid var(--print-dark);
 		border-radius: 50%;
 		background: repeating-linear-gradient(45deg, var(--print-mid) 0 1px, transparent 1px 5px);
-		transform: translate(-50%, -50%) rotate(var(--angle)) scale(var(--project-plate-scale, 1));
+		transform: translate(
+				calc(-50% + var(--spread-x) * var(--spread)),
+				calc(-50% + var(--spread-y) * var(--spread))
+			)
+			rotate(var(--angle)) scale(calc(1 + 0.16 * var(--spread)));
 	}
 
 	.plate[data-shape='1'] {
@@ -91,7 +103,7 @@
 
 	@media (prefers-reduced-motion: no-preference) {
 		.plate {
-			transition: transform 280ms cubic-bezier(0.22, 0.61, 0.36, 1);
+			transition: transform 440ms cubic-bezier(0.19, 0.75, 0.24, 1);
 		}
 	}
 </style>

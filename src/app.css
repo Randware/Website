@@ -1,33 +1,8 @@
 @import 'tailwindcss/base';
-@import '@fontsource/merriweather/latin-400.css';
 @import '@fontsource/merriweather/latin-700.css';
 @import '@fontsource/rubik/latin-400.css';
 @import '@fontsource/rubik/latin-500.css';
 @import '@fontsource/rubik/latin-600.css';
-
-@property --paper {
-	syntax: '<color>';
-	inherits: true;
-	initial-value: #f2f0e3;
-}
-
-@property --ink {
-	syntax: '<color>';
-	inherits: true;
-	initial-value: #202020;
-}
-
-@property --card {
-	syntax: '<color>';
-	inherits: true;
-	initial-value: #f8f6eb;
-}
-
-@property --frame-scroll-distance {
-	syntax: '<length>';
-	inherits: true;
-	initial-value: 0px;
-}
 
 :root {
 	color-scheme: light dark;
@@ -41,8 +16,14 @@
 	--paper-edge: light-dark(rgb(32 32 32 / 17%), rgb(0 0 0 / 48%));
 	--paper-radius: 0.625rem;
 	--header-control-size: 2.875rem;
-	--frame-inset: max(clamp(0.5rem, 2vw, 1.5rem), calc((100% - 78rem) / 2));
-	--frame-scroll-distance: clamp(10rem, 34svh, 20rem);
+	--header-row-height: 4.75rem;
+	--site-header-height: calc(var(--header-row-height) + 4px + env(safe-area-inset-top, 0px));
+	--frame-inset: max(
+		clamp(0.5rem, 2vw, 1.5rem),
+		calc((100% - 78rem) / 2),
+		env(safe-area-inset-left, 0px),
+		env(safe-area-inset-right, 0px)
+	);
 	--muted: color-mix(in srgb, var(--ink) 75%, var(--paper));
 	--accent: var(--ink);
 	--accent-hover: color-mix(in srgb, var(--ink) 84%, var(--paper));
@@ -51,7 +32,11 @@
 	--scroll-thumb: color-mix(in srgb, var(--ink) 50%, var(--paper));
 	--serif: 'Merriweather', Georgia, serif;
 	--sans: 'Rubik', system-ui, sans-serif;
-	--gutter: clamp(1.25rem, 5vw, 4.5rem);
+	--gutter: max(
+		clamp(1.25rem, 5vw, 4.5rem),
+		env(safe-area-inset-left, 0px),
+		env(safe-area-inset-right, 0px)
+	);
 
 	background-color: var(--paper);
 	color: var(--ink);
@@ -59,7 +44,13 @@
 	font-synthesis: none;
 	line-height: 1.6;
 	scrollbar-color: var(--scroll-thumb) var(--paper);
-	scroll-padding-block-start: 6.5rem;
+	scroll-padding-block-start: calc(var(--site-header-height) + 1.5rem);
+}
+
+@media (width < 48rem) {
+	:root {
+		--header-row-height: 4.125rem;
+	}
 }
 
 :root[data-theme='light'] {
@@ -250,15 +241,8 @@ h3 {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-	:root {
-		transition:
-			--paper 180ms ease-out,
-			--ink 180ms ease-out,
-			--card 180ms ease-out;
-	}
-
-	:root.theme-reveal {
-		transition: none;
+	.page-heading {
+		animation: content-enter 200ms ease-out;
 	}
 
 	.theme-reveal .site *,
@@ -304,10 +288,22 @@ h3 {
 	}
 
 	.pressable {
-		transition:
-			background-color 150ms ease,
-			color 150ms ease,
-			transform 120ms ease,
-			box-shadow 120ms ease;
+		transition: transform 110ms ease-out;
+	}
+}
+
+@keyframes content-enter {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@media (width < 48rem), (pointer: coarse) {
+	.paper-panel.pressable:is(:active, [data-pressed]) {
+		transform: none;
+		box-shadow: var(--press-x) var(--press-y) 0 var(--press-shadow);
 	}
 }

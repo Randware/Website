@@ -185,20 +185,13 @@
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
-		.project:has(.project-link:focus-visible) {
-			--project-plate-spread: 1;
-		}
-
 		.project-arrow {
-			transition:
-				transform 140ms ease,
-				background-color 140ms ease,
-				border-color 140ms ease,
-				color 140ms ease;
+			transition: transform 140ms ease;
 		}
 
-		@media (hover: hover) {
-			.project:hover {
+		@media (min-width: 48rem) and (hover: hover) and (pointer: fine) {
+			.project:hover,
+			.project:has(.project-link:focus-visible) {
 				--project-plate-spread: 1;
 			}
 

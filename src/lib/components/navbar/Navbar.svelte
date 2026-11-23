@@ -4,7 +4,7 @@
 	import { page } from '$app/state';
 	import Brand from '#lib/components/Brand.svelte';
 	import ThemeSwitcher from '#lib/components/ThemeSwitcher.svelte';
-	import { easedScrollProgress } from '#lib/scroll.js';
+	import { easedScrollProgress, heroScrollProgress, visibleViewportHeight } from '#lib/scroll.js';
 	import { ArrowRight, Menu, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 
@@ -45,43 +45,52 @@
 		const motion = matchMedia('(prefers-reduced-motion: reduce)');
 		const listeners = new AbortController();
 		const { signal } = listeners;
+		let heroProgress: number | undefined;
 		let distance = 0;
 		let frame = 0;
 
 		function draw() {
 			frame = 0;
-			if (motion.matches) {
+			if (heroProgress !== undefined) scrollProgress = heroProgress;
+			else if (motion.matches) {
 				if (scrollY >= 20) scrollProgress = 1;
 				else if (scrollY <= 4) scrollProgress = 0;
-			} else {
-				scrollProgress = easedScrollProgress(scrollY, distance);
-			}
+			} else scrollProgress = easedScrollProgress(scrollY, distance);
 		}
 
 		function measure() {
-			const { clientHeight, scrollHeight } = root;
-			const range = Number.parseFloat(
-				getComputedStyle(root).getPropertyValue('--frame-scroll-distance')
-			);
-			distance = Math.min(scrollHeight - clientHeight, range > 0 ? range : clientHeight * 0.34);
+			if (heroProgress === undefined) {
+				const height = visibleViewportHeight(root.clientHeight, window.visualViewport);
+				distance = Math.min(
+					Math.max(0, root.scrollHeight - root.clientHeight),
+					Math.min(320, Math.max(160, height * 0.34))
+				);
+			}
 			cancelAnimationFrame(frame);
 			draw();
 		}
 
 		function onScroll() {
+			// The landing page publishes in the same frame as the artwork. Other
+			// pages use the original easing, and stop scheduling once fully floated.
+			if (heroProgress !== undefined || (scrollProgress === 1 && scrollY >= distance)) return;
 			if (!frame) frame = requestAnimationFrame(draw);
 		}
 
+		const unsubscribe = heroScrollProgress.subscribe((progress) => {
+			heroProgress = progress;
+			measure();
+		});
 		const observer = new ResizeObserver(measure);
 		observer.observe(document.body);
 		window.addEventListener('scroll', onScroll, { passive: true, signal });
 		window.addEventListener('resize', measure, { signal });
 		desktop.addEventListener('change', closeMenu, { signal });
 		motion.addEventListener('change', measure, { signal });
-		measure();
 
 		return () => {
 			listeners.abort();
+			unsubscribe();
 			observer.disconnect();
 			cancelAnimationFrame(frame);
 		};
@@ -156,15 +165,15 @@
 
 <style>
 	header {
-		--header-row-height: 4.75rem;
-		--header-motion: 240ms cubic-bezier(0.25, 0.75, 0.35, 1);
-		--header-detach: var(--hero-scroll-progress, var(--page-scroll-progress, 0));
+		--header-motion: 180ms cubic-bezier(0.2, 0.7, 0.3, 1);
+		--header-detach: var(--page-scroll-progress, 0);
 		--header-menu-shadow: 0;
+		--header-safe-top: env(safe-area-inset-top, 0px);
 
 		position: sticky;
 		z-index: 10;
 		inset-block-start: 0;
-		min-block-size: calc(var(--header-row-height) + 4px);
+		min-block-size: var(--site-header-height);
 		pointer-events: none;
 	}
 
@@ -190,7 +199,7 @@
 		position: absolute;
 		z-index: 0;
 		inset: 0 0 auto;
-		padding: 2px var(--gutter);
+		padding: calc(2px + var(--header-safe-top)) var(--gutter) 2px;
 		transform: translateY(calc(var(--floating-offset, 0.875rem) * var(--header-detach)));
 		-webkit-user-select: none;
 		user-select: none;
@@ -203,7 +212,7 @@
 
 		position: absolute;
 		z-index: -1;
-		inset: 0 calc(var(--frame-inset) * var(--header-detach));
+		inset: var(--header-safe-top) calc(var(--frame-inset) * var(--header-detach)) 0;
 		border: 2px solid color-mix(in srgb, var(--line-strong) var(--floating-opacity), transparent);
 		border-bottom-color: var(--line-strong);
 		border-radius: calc(var(--paper-radius) * var(--header-detach));
@@ -302,7 +311,9 @@
 
 	.menu-control {
 		position: absolute;
-		inset-block-start: calc(2px + (var(--header-row-height) - var(--header-control-size)) / 2);
+		inset-block-start: calc(
+			2px + var(--header-safe-top) + (var(--header-row-height) - var(--header-control-size)) / 2
+		);
 		inset-inline-end: var(--gutter);
 		list-style: none;
 		pointer-events: auto;
@@ -414,36 +425,34 @@
 
 		@supports selector(::details-content) {
 			.mobile-menu::details-content {
-				display: grid;
-				grid-template-rows: 0fr;
 				opacity: 0;
+				transform: translateY(-0.375rem);
 				transition:
-					grid-template-rows var(--header-motion),
-					opacity 160ms ease,
-					content-visibility 240ms allow-discrete;
+					opacity 140ms ease-out,
+					transform var(--header-motion),
+					content-visibility 180ms allow-discrete;
 			}
 
 			.mobile-menu[open]::details-content {
-				grid-template-rows: 1fr;
 				opacity: 1;
+				transform: none;
 			}
 		}
 
 		@supports not selector(::details-content) {
 			.mobile-menu[open] .menu-reveal {
-				display: grid;
 				animation: reveal-menu var(--header-motion) both;
 			}
 
 			@keyframes reveal-menu {
 				from {
-					grid-template-rows: 0fr;
 					opacity: 0;
+					transform: translateY(-0.375rem);
 				}
 
 				to {
-					grid-template-rows: 1fr;
 					opacity: 1;
+					transform: none;
 				}
 			}
 		}
@@ -451,7 +460,6 @@
 
 	@media (width < 48rem) {
 		header {
-			--header-row-height: 4.125rem;
 			--floating-offset: 0.625rem;
 		}
 

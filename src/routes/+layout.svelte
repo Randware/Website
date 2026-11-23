@@ -1,55 +1,19 @@
 <script lang="ts">
 	import Footer from '#lib/components/footer/Footer.svelte';
 	import Navbar from '#lib/components/navbar/Navbar.svelte';
-	import { onMount } from 'svelte';
+	import bodyFont from '@fontsource/rubik/files/rubik-latin-400-normal.woff2?url';
+	import headingFont from '@fontsource/merriweather/files/merriweather-latin-700-normal.woff2?url';
 	import '../app.css';
 
 	let { children } = $props();
-	let site: HTMLDivElement;
 	let pressed: { element: HTMLElement; pointerId: number } | undefined;
-
-	onMount(() => {
-		const root = document.documentElement;
-		if (root.dataset.pageIntro === 'static') {
-			const frame = requestAnimationFrame(() => delete root.dataset.pageIntro);
-			return () => cancelAnimationFrame(frame);
-		}
-		if (root.dataset.pageIntro !== 'pending') return;
-		root.dataset.pageIntro = 'preparing';
-		const page = site;
-		page.addEventListener('animationcancel', finishPageFade);
-
-		let frame = 0;
-		let disposed = false;
-		void document.fonts.ready.then(() => {
-			if (disposed) return;
-			// Let the hero's resize and scroll measurements settle with the loaded fonts.
-			frame = requestAnimationFrame(() => {
-				frame = requestAnimationFrame(() => {
-					if (matchMedia('(prefers-reduced-motion: reduce)').matches) delete root.dataset.pageIntro;
-					else root.dataset.pageIntro = 'ready';
-				});
-			});
-		});
-
-		return () => {
-			disposed = true;
-			cancelAnimationFrame(frame);
-			page.removeEventListener('animationcancel', finishPageFade);
-			delete root.dataset.pageIntro;
-		};
-	});
-
-	function finishPageFade(event: AnimationEvent) {
-		if (event.target === event.currentTarget) delete document.documentElement.dataset.pageIntro;
-	}
 
 	function startTouchPress(event: PointerEvent) {
 		if (!event.isPrimary || event.pointerType !== 'touch' || event.button !== 0) return;
 		if (!(event.target instanceof Element)) return;
 
 		const element = event.target.closest<HTMLElement>('.pressable:not(:disabled)');
-		if (!element) return;
+		if (!element || element.classList.contains('paper-panel')) return;
 
 		clearTouchPress();
 		pressed = { element, pointerId: event.pointerId };
@@ -67,14 +31,20 @@
 	}
 </script>
 
+<svelte:head>
+	<link rel="preload" href={bodyFont} as="font" type="font/woff2" crossorigin="anonymous" />
+	<link rel="preload" href={headingFont} as="font" type="font/woff2" crossorigin="anonymous" />
+</svelte:head>
+
 <svelte:window
 	onpointerdown={startTouchPress}
 	onpointerup={finishTouchPress}
 	onpointercancel={finishTouchPress}
 	onblur={clearTouchPress}
+	onscroll={clearTouchPress}
 />
 
-<div class="site" id="page-top" bind:this={site} onanimationend={finishPageFade}>
+<div class="site" id="page-top">
 	<a class="skip-link" href="#main-content">Skip to content</a>
 	<Navbar />
 
@@ -84,29 +54,13 @@
 
 	<Footer />
 </div>
-<div id="theme-ripple" aria-hidden="true"></div>
 
 <style>
 	.site {
 		display: flex;
 		min-height: 100vh;
+		min-height: 100svh;
 		flex-direction: column;
-	}
-
-	@media (prefers-reduced-motion: no-preference) {
-		:global(:root[data-page-intro='ready']) .site {
-			animation: page-fade-in 420ms ease-out;
-		}
-	}
-
-	@keyframes page-fade-in {
-		from {
-			opacity: 0;
-		}
-
-		to {
-			opacity: 1;
-		}
 	}
 
 	main {
@@ -115,15 +69,6 @@
 
 	main:focus {
 		outline: none;
-	}
-
-	#theme-ripple {
-		position: fixed;
-		z-index: 11;
-		inset: 0;
-		background: var(--ink);
-		opacity: 0;
-		pointer-events: none;
 	}
 
 	.skip-link {

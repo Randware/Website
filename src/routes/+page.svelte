@@ -6,16 +6,21 @@
 	import ProjectFallback from '#lib/components/ProjectFallback.svelte';
 	import ProjectItem from '#lib/components/ProjectItem.svelte';
 	import { githubProfile, githubRepositories } from '#lib/projects.js';
-	import { easedScrollProgress } from '#lib/scroll.js';
+	import {
+		easedScrollProgress,
+		heroGeometry,
+		heroScrollProgress,
+		visibleViewportHeight
+	} from '#lib/scroll.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 	let hero: HTMLElement;
 	let heroContent: HTMLDivElement;
-	let heroTrack: HTMLDivElement;
+	let heroStage: HTMLDivElement;
+	let heroFrame: HTMLDivElement;
 	let valuesHeading: HTMLHeadingElement;
 	let valueStack: HTMLDivElement;
-	let stopCueScroll: (() => void) | undefined;
 
 	const description =
 		'We’re a group of friends who like making open-source software. Take a look at what we’ve built.';
@@ -24,9 +29,10 @@
 		const motion = matchMedia('(prefers-reduced-motion: reduce)');
 		const listeners = new AbortController();
 		const root = document.documentElement;
-		const introExpired = root.dataset.pageIntro === 'static';
 		let distance = 0;
 		let frame = 0;
+		let measureFrame = 0;
+		let measuredWidth = 0;
 		let previousProgress = -1;
 
 		function draw() {
@@ -34,50 +40,88 @@
 			const progress = distance ? easedScrollProgress(scrollY, distance) : 1;
 			if (progress === previousProgress) return;
 
-			if (distance) root.style.setProperty('--hero-scroll-progress', String(progress));
-			else root.style.removeProperty('--hero-scroll-progress');
+			// Keep scroll state local: changing an inherited property on <html>
+			// invalidates styles throughout every project card and decorative print.
+			hero.style.setProperty('--hero-scroll-progress', String(progress));
+			heroScrollProgress.set(distance ? progress : undefined);
 			hero.toggleAttribute('data-scroll-cue', distance > 0 && progress < 0.4);
+			hero.toggleAttribute('data-hero-active', distance > 0 && progress < 1);
 			previousProgress = progress;
 		}
 
 		function measure() {
+			measureFrame = 0;
+			hero.setAttribute('data-hero-ready', '');
 			const top = hero.getBoundingClientRect().top + scrollY;
-			const room = root.clientHeight - top;
-			hero.toggleAttribute(
-				'data-scroll-hero',
-				!introExpired && !motion.matches && room > heroContent.offsetHeight + 88
-			);
+			const viewportHeight = visibleViewportHeight(root.clientHeight, window.visualViewport);
+			const frameStyle = getComputedStyle(heroFrame);
+			const geometry = heroGeometry({
+				viewportWidth: root.clientWidth,
+				viewportHeight,
+				top,
+				stageHeight: heroStage.getBoundingClientRect().height,
+				frameWidth: Number.parseFloat(frameStyle.width),
+				frameHeight: Number.parseFloat(frameStyle.height)
+			});
+			const enabled = !motion.matches && geometry.height > heroContent.offsetHeight + 88;
+			measuredWidth = root.clientWidth;
+			distance = enabled ? Math.min(320, Math.max(160, viewportHeight * 0.34)) : 0;
 			hero.style.setProperty('--hero-top', `${top}px`);
-			distance = heroTrack.offsetHeight;
+			hero.style.setProperty('--hero-scale-x', String(geometry.scaleX));
+			hero.style.setProperty('--hero-scale-y', String(geometry.scaleY));
+			hero.style.setProperty('--hero-extra', `${geometry.extra}px`);
+			hero.style.setProperty('--hero-art-width', `${measuredWidth}px`);
+			hero.style.setProperty('--hero-art-height', `${geometry.height}px`);
+			hero.style.setProperty('--hero-scroll-distance', `${distance}px`);
+			hero.toggleAttribute('data-scroll-hero', enabled);
 			previousProgress = -1;
 			cancelAnimationFrame(frame);
 			draw();
 		}
 
 		function onScroll() {
-			if (distance && !frame) frame = requestAnimationFrame(draw);
+			if (!distance || (previousProgress === 1 && scrollY >= distance)) return;
+			if (scrollY <= 0 && previousProgress > 0) {
+				scheduleMeasure();
+				return;
+			}
+			if (!frame) frame = requestAnimationFrame(draw);
 		}
 
-		const observer = new ResizeObserver(measure);
+		function scheduleMeasure() {
+			if (!measureFrame) measureFrame = requestAnimationFrame(measure);
+		}
+
+		function onResize() {
+			// Mobile toolbars resize the visual viewport during a swipe. Freeze the
+			// opening's geometry mid-scroll; refresh it at the top or on rotation.
+			if (root.clientWidth === measuredWidth && measuredWidth < 768 && scrollY > 4) return;
+			scheduleMeasure();
+		}
+
+		const observer = new ResizeObserver(scheduleMeasure);
 		observer.observe(heroContent);
 		window.addEventListener('scroll', onScroll, { passive: true, signal: listeners.signal });
-		window.addEventListener('resize', measure, { signal: listeners.signal });
-		motion.addEventListener('change', measure, { signal: listeners.signal });
+		window.addEventListener('resize', onResize, { signal: listeners.signal });
+		window.visualViewport?.addEventListener('resize', onResize, { signal: listeners.signal });
+		motion.addEventListener('change', scheduleMeasure, { signal: listeners.signal });
 		measure();
 
 		return () => {
 			listeners.abort();
 			observer.disconnect();
 			cancelAnimationFrame(frame);
-			stopCueScroll?.();
-			root.style.removeProperty('--hero-scroll-progress');
+			cancelAnimationFrame(measureFrame);
+			heroScrollProgress.set(undefined);
 		};
 	});
 
 	onMount(() => {
 		const panels = [...valueStack.querySelectorAll<HTMLElement>('.value')];
+		let frame = 0;
 
 		function clipArtwork() {
+			frame = 0;
 			const stack = valueStack.getBoundingClientRect();
 			const path = panels
 				.map((panel) => {
@@ -103,55 +147,24 @@
 			valueStack.style.setProperty('--values-clip', `path("${path}")`);
 		}
 
-		const observer = new ResizeObserver(clipArtwork);
+		const observer = new ResizeObserver(() => {
+			if (!frame) frame = requestAnimationFrame(clipArtwork);
+		});
 		observer.observe(valueStack);
 		for (const panel of panels) observer.observe(panel);
 		clipArtwork();
-		return () => observer.disconnect();
+		return () => {
+			observer.disconnect();
+			cancelAnimationFrame(frame);
+		};
 	});
 
 	function scrollToValues() {
-		stopCueScroll?.();
 		valuesHeading.focus({ preventScroll: true });
-
-		const motion = matchMedia('(prefers-reduced-motion: reduce)');
-		if (motion.matches) {
-			valuesHeading.scrollIntoView({ behavior: 'instant', block: 'start' });
-			return;
-		}
-
-		const root = document.documentElement;
-		const start = scrollY;
-		const padding = Number.parseFloat(getComputedStyle(root).scrollPaddingTop) || 0;
-		const target = start + valuesHeading.getBoundingClientRect().top - padding;
-		const destination = Math.max(0, Math.min(target, root.scrollHeight - root.clientHeight));
-		const travel = destination - start;
-		const started = performance.now();
-		const listeners = new AbortController();
-		let frame = 0;
-
-		function stop() {
-			cancelAnimationFrame(frame);
-			listeners.abort();
-			stopCueScroll = undefined;
-		}
-
-		function advance(time: number) {
-			const seconds = Math.max(0, time - started) / 1000;
-			const remaining = travel * Math.exp(-6 * seconds);
-			const atRest = Math.abs(remaining) <= 1.5;
-			window.scrollTo({ top: atRest ? destination : destination - remaining, behavior: 'instant' });
-			if (!atRest) frame = requestAnimationFrame(advance);
-			else stop();
-		}
-
-		const { signal } = listeners;
-		for (const event of ['wheel', 'pointerdown', 'keydown', 'resize']) {
-			window.addEventListener(event, stop, { passive: true, signal });
-		}
-		motion.addEventListener('change', stop, { signal });
-		stopCueScroll = stop;
-		frame = requestAnimationFrame(advance);
+		valuesHeading.scrollIntoView({
+			behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+			block: 'start'
+		});
 	}
 </script>
 
@@ -163,12 +176,13 @@
 </svelte:head>
 
 <section class="hero" aria-labelledby="home-title" bind:this={hero}>
-	<div class="hero-stage">
-		<div class="hero-frame paper-panel" aria-hidden="true">
+	<div class="hero-stage" bind:this={heroStage}>
+		<div class="hero-frame" aria-hidden="true" bind:this={heroFrame}>
 			<div class="paper-print hero-print">
 				<PaperArtwork seed={data.headlineArtworkSeed} />
 			</div>
 		</div>
+		<div class="hero-outline" aria-hidden="true"></div>
 		<div class="shell hero-content" bind:this={heroContent}>
 			<h1 id="home-title">Random software you might enjoy</h1>
 			<p class="intro">We ❤️ software</p>
@@ -190,7 +204,7 @@
 			<ArrowDown size={21} strokeWidth={1.8} aria-hidden="true" />
 		</button>
 	</div>
-	<div class="hero-track" bind:this={heroTrack} aria-hidden="true"></div>
+	<div class="hero-track" aria-hidden="true"></div>
 </section>
 
 <section class="values" aria-labelledby="home-values">
@@ -270,6 +284,8 @@
 		--hero-gap: clamp(1.25rem, 3.3vw, 3rem);
 		--hero-inset: max(var(--gutter), calc((100% - 74rem) / 2));
 		--hero-expanded: calc(1 - var(--hero-scroll-progress, 1));
+		--hero-current-scale-x: calc(1 + (var(--hero-scale-x, 1) - 1) * var(--hero-expanded));
+		--hero-current-scale-y: calc(1 + (var(--hero-scale-y, 1) - 1) * var(--hero-expanded));
 
 		text-align: center;
 	}
@@ -286,60 +302,104 @@
 	}
 
 	.hero-content {
+		position: relative;
+		z-index: 1;
 		padding: calc(2px + clamp(2.375rem, 6.75vw, 5.5rem)) calc(2px + clamp(0.875rem, 3vw, 2rem));
 	}
 
-	.hero-frame {
+	.hero-frame,
+	.hero-outline {
 		position: absolute;
-		z-index: -1;
 		inset: var(--hero-gap) var(--hero-inset);
-		isolation: isolate;
+		border-radius: var(--paper-radius);
 		pointer-events: none;
 	}
 
-	.hero:global([data-scroll-hero]) .hero-stage {
-		--hero-bottom: calc(
-			var(--hero-gap) + (100% - 100svh + var(--hero-top) - var(--hero-gap)) * var(--hero-expanded)
-		);
+	.hero-frame {
+		z-index: -1;
+		isolation: isolate;
+		overflow: hidden;
+		background: var(--card);
+	}
 
+	.hero-outline {
+		z-index: 0;
+		border: 2px solid var(--line-strong);
+		box-shadow: 0.2rem 0.25rem 0 var(--paper-edge);
+	}
+
+	.hero:global([data-scroll-hero]) .hero-stage {
 		position: sticky;
 		inset-block-start: var(--hero-top);
 	}
 
-	.hero:global([data-scroll-hero]) .hero-frame {
-		--hero-radius: calc(var(--paper-radius) * (1 - var(--hero-expanded)));
+	@media (prefers-reduced-motion: no-preference) {
+		/* Render the fullscreen opening before hydration as well. Measurement
+		   replaces this with the scrollable stage without hiding the page. */
+		.hero:not(:global([data-hero-ready])) .hero-stage {
+			display: grid;
+			min-height: calc(100vh - var(--site-header-height));
+			min-height: calc(100svh - var(--site-header-height));
+			min-height: calc(100dvh - var(--site-header-height));
+			place-items: center;
+		}
 
-		inset-block-start: calc(
-			var(--hero-gap) - (var(--hero-gap) + var(--hero-top)) * var(--hero-expanded)
+		.hero:not(:global([data-hero-ready])) .hero-frame,
+		.hero:not(:global([data-hero-ready])) .hero-outline {
+			inset: 0;
+			border-radius: 0;
+		}
+
+		.hero:not(:global([data-hero-ready])) .hero-outline {
+			border-color: transparent;
+			box-shadow: none;
+		}
+	}
+
+	.hero:global([data-scroll-hero]) .hero-frame {
+		border-radius: calc(var(--paper-radius) * var(--hero-scroll-progress));
+		transform-origin: center top;
+		transform: translateY(calc(-1 * var(--hero-gap) * var(--hero-expanded)))
+			scale(var(--hero-current-scale-x), var(--hero-current-scale-y));
+	}
+
+	/* Keep the stroke outside the scaled clipping layer. A transparent border
+	   still takes up space and exposes enlarged strips of the paper beneath it. */
+	.hero:global([data-scroll-hero]) .hero-outline {
+		inset-block-start: calc(var(--hero-gap) * var(--hero-scroll-progress));
+		inset-block-end: calc(
+			var(--hero-gap) * var(--hero-scroll-progress) - var(--hero-extra) * var(--hero-expanded)
 		);
-		inset-block-end: var(--hero-bottom);
-		inset-inline: calc(var(--hero-inset) * (1 - var(--hero-expanded)));
+		inset-inline: calc(var(--hero-inset) * var(--hero-scroll-progress));
 		border-color: color-mix(
 			in srgb,
 			var(--line-strong) calc(100% * var(--hero-scroll-progress)),
 			transparent
 		);
-		border-radius: var(--hero-radius);
+		border-radius: calc(var(--paper-radius) * var(--hero-scroll-progress));
 		box-shadow: 0.2rem 0.25rem 0
 			color-mix(in srgb, var(--paper-edge) calc(100% * var(--hero-scroll-progress)), transparent);
 	}
 
 	.hero:global([data-scroll-hero]) .hero-content {
-		transform: translateY(
-			calc((50svh - var(--hero-top) - var(--hero-gap) - 50%) * var(--hero-expanded))
-		);
+		transform: translateY(calc(var(--hero-extra) * 0.5 * var(--hero-expanded)));
 	}
 
 	.hero:global([data-scroll-hero]) .hero-track {
-		height: var(--frame-scroll-distance);
+		height: var(--hero-scroll-distance);
+	}
+
+	.hero:global([data-hero-active]) :is(.hero-frame, .hero-print, .hero-content) {
+		will-change: transform;
 	}
 
 	.scroll-cue {
 		position: absolute;
-		inset-block-end: calc(var(--hero-bottom) + clamp(1.25rem, 4svh, 2rem));
+		inset-block-end: calc(var(--hero-gap) + 0.75rem + env(safe-area-inset-bottom, 0px));
 		inset-inline-start: calc(50% - var(--header-control-size) / 2);
 		display: none;
 		opacity: clamp(0, calc((var(--hero-expanded) - 0.6) * 5), 1);
+		transform: translateY(calc(var(--hero-extra, 0px) * var(--hero-expanded)));
 	}
 
 	.hero:global([data-scroll-cue]) .scroll-cue {
@@ -374,9 +434,20 @@
 	}
 
 	.paper-print.hero-print {
-		inset: calc(-2px * var(--hero-expanded));
-		border-radius: max(0px, calc(var(--hero-radius, var(--paper-radius)) - 2px));
+		border-radius: 0;
 		mask-image: radial-gradient(ellipse 51% 76% at center, transparent 43%, #000 100%);
+	}
+
+	.hero:global([data-scroll-hero]) .hero-print {
+		inset: auto;
+		top: 50%;
+		left: 50%;
+		width: var(--hero-art-width);
+		height: var(--hero-art-height);
+		/* The frame scales, while its fixed-size print counter-scales. The fine
+		   gradients keep their proportions and do not resize/repaint each frame. */
+		transform: translate(-50%, -50%)
+			scale(calc(1 / var(--hero-current-scale-x)), calc(1 / var(--hero-current-scale-y)));
 	}
 
 	.projects {
@@ -444,6 +515,7 @@
 			linear-gradient(90deg, var(--print-grid) 1px, transparent 1px);
 		background-size: 12px 12px;
 		pointer-events: none;
+		contain: layout paint;
 	}
 
 	.values-print {

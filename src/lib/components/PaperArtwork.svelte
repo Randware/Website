@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+
 	const patterns = ['contours', 'rays', 'hatch', 'pinholes', 'frames', 'rules'] as const;
 	const shapes = ['arch', 'ellipse', 'leaf', 'capsule', 'sheet'] as const;
 
@@ -14,6 +16,31 @@
 
 	let { seed, layout = 'hero' }: { seed: number; layout?: Layout } = $props();
 	const artwork = $derived(composePrint(seed, layout));
+	let element: HTMLDivElement;
+	let running = $state(false);
+
+	onMount(() => {
+		if (layout !== 'hero') return;
+		const motion = matchMedia(
+			'(min-width: 48rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)'
+		);
+		let inView = false;
+		function sync() {
+			running = inView && motion.matches && !document.hidden;
+		}
+		const observer = new IntersectionObserver(([entry]) => {
+			inView = entry.isIntersecting;
+			sync();
+		});
+		observer.observe(element);
+		motion.addEventListener('change', sync);
+		document.addEventListener('visibilitychange', sync);
+		return () => {
+			observer.disconnect();
+			motion.removeEventListener('change', sync);
+			document.removeEventListener('visibilitychange', sync);
+		};
+	});
 
 	function composePrint(seed: number, layout: Layout) {
 		let state = seed;
@@ -84,7 +111,14 @@
 	}
 </script>
 
-<div class="artwork" data-layout={layout} data-seed={seed} aria-hidden="true">
+<div
+	class="artwork"
+	data-layout={layout}
+	data-seed={seed}
+	data-running={running}
+	bind:this={element}
+	aria-hidden="true"
+>
 	<div
 		class="band"
 		style:--y="{artwork.band.y}%"
@@ -229,9 +263,20 @@
 		);
 	}
 
-	@media (prefers-reduced-motion: no-preference) {
+	@media (min-width: 48rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
 		.artwork[data-layout='hero'] .plate {
 			animation: drift var(--duration) ease-in-out var(--delay) infinite;
+			animation-play-state: paused;
+		}
+
+		.artwork[data-layout='hero'][data-running='true'] .plate {
+			animation-play-state: running;
+		}
+	}
+
+	@media (width < 48rem), (pointer: coarse) {
+		.plate:nth-child(n + 6) {
+			display: none;
 		}
 	}
 

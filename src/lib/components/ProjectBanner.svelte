@@ -56,6 +56,7 @@
 		background-image: radial-gradient(circle, var(--print-mid) 0.6px, transparent 0.9px);
 		background-size: var(--print-step) var(--print-step);
 		pointer-events: none;
+		contain: layout paint;
 	}
 
 	.project-print[data-stock='1'] {
@@ -108,7 +109,7 @@
 		background: repeating-linear-gradient(90deg, var(--print-mid) 0 1px, transparent 1px 6px);
 	}
 
-	@media (prefers-reduced-motion: no-preference) {
+	@media (min-width: 48rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
 		.plate {
 			transition: transform 440ms cubic-bezier(0.19, 0.75, 0.24, 1);
 		}

@@ -64,7 +64,10 @@
 		if (!current) return;
 
 		const next = current === 'dark' ? 'light' : 'dark';
-		if (activeTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		const detailedMotion = matchMedia(
+			'(min-width: 48rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)'
+		).matches;
+		if (activeTransition || !detailedMotion || !document.startViewTransition) {
 			stopReveal();
 			setTheme(next);
 			return;
@@ -75,12 +78,6 @@
 		const y = top + height / 2;
 		const origin = `${x}px ${y}px`;
 		const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)) + 1;
-
-		if (!document.startViewTransition) {
-			setTheme(next);
-			playRipple(origin, radius);
-			return;
-		}
 
 		const root = document.documentElement;
 		root.style.setProperty('--theme-origin', origin);
@@ -94,20 +91,6 @@
 		void animation.ready.catch(() => {});
 		const finish = () => clearReveal(animation);
 		void animation.finished.then(finish, finish);
-	}
-
-	function playRipple(origin: string, radius: number) {
-		const ripple = document.getElementById('theme-ripple');
-		if (!ripple) return;
-
-		for (const animation of ripple.getAnimations()) animation.cancel();
-		ripple.animate(
-			[
-				{ clipPath: `circle(0 at ${origin})`, opacity: 0.22 },
-				{ clipPath: `circle(${radius}px at ${origin})`, opacity: 0 }
-			],
-			{ duration: 380, easing: 'cubic-bezier(0.25, 0.65, 0.3, 1)' }
-		);
 	}
 </script>
 

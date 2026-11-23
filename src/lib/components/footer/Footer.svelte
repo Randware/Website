@@ -49,7 +49,7 @@
 	footer {
 		--footer-padding: clamp(1rem, 2.5vw, 1.625rem);
 
-		padding-block-end: clamp(2rem, 4vw, 3rem);
+		padding-block-end: calc(clamp(2rem, 4vw, 3rem) + env(safe-area-inset-bottom, 0px));
 	}
 
 	.footer-stack {

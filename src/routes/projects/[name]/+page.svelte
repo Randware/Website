@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { ArrowLeft, ArrowUpRight, Star } from 'lucide-svelte';
 	import ProjectBanner from '#lib/components/ProjectBanner.svelte';
 	import ProjectFallback from '#lib/components/ProjectFallback.svelte';
 	import ProjectGlyph from '#lib/components/ProjectGlyph.svelte';
 	import ProjectLanguages from '#lib/components/ProjectLanguages.svelte';
+	import { isExternalLink } from '#lib/external-link.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -62,12 +64,18 @@
 				{/if}
 				<div class="flex flex-wrap items-center gap-x-4 gap-y-2.5 text-[0.9375rem] text-muted">
 					{#if project.website}
-						<a class="text-link" href={project.website}>
+						{@const external = isExternalLink(project.website, page.url.origin)}
+						<a
+							class="text-link"
+							href={project.website}
+							target={external ? '_blank' : undefined}
+							rel={external ? 'noopener' : undefined}
+						>
 							Website <ArrowUpRight size={16} strokeWidth={1.7} aria-hidden="true" />
 						</a>
 					{/if}
 					<div class="flex flex-wrap items-center gap-x-4 gap-y-2.5">
-						<a class="text-link" href={project.url}>
+						<a class="text-link" href={project.url} target="_blank" rel="noopener">
 							Source <ArrowUpRight size={16} strokeWidth={1.7} aria-hidden="true" />
 						</a>
 						<span

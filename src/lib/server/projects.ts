@@ -1,4 +1,5 @@
 import { GITHUB_TOKEN } from '$app/env/private';
+import { isExternalLink } from '#lib/external-link.js';
 import { organization, type Project, type ProjectLanguage } from '#lib/projects.js';
 import sanitizeHtml from 'sanitize-html';
 import { cached, githubFetch } from './github-cache.js';
@@ -135,10 +136,25 @@ async function fetchPinnedNames() {
 	);
 }
 
-export function getReadme(project: Project) {
-	return cached(`readme:${project.name.toLowerCase()}:${project.branch}`, () =>
+export async function getReadme(project: Project, origin: string) {
+	const readme = await cached(`readme:${project.name.toLowerCase()}:${project.branch}`, () =>
 		fetchReadme(project)
 	);
+	if (!readme) return null;
+
+	// Apply tab behavior when serving the README so existing snapshots work at any site origin.
+	return sanitizeHtml(readme, {
+		...readmeSanitizerOptions,
+		transformTags: {
+			a: (tagName, attribs) => ({
+				tagName,
+				attribs:
+					attribs.href && isExternalLink(attribs.href, origin)
+						? { ...attribs, target: '_blank', rel: 'noopener' }
+						: attribs
+			})
+		}
+	});
 }
 
 export function getLanguages(project: Project) {
@@ -181,40 +197,44 @@ async function fetchReadme(project: Project) {
 	return readme;
 }
 
+const readmeSanitizerOptions = {
+	allowedTags: [
+		...sanitizeHtml.defaults.allowedTags,
+		'img',
+		'details',
+		'summary',
+		'del',
+		'kbd',
+		'samp',
+		'input'
+	],
+	allowedAttributes: {
+		a: ['href', 'id', 'title', 'target', 'rel'],
+		details: ['open'],
+		div: [{ name: 'align', values: ['center'] }],
+		img: ['src', 'alt', 'title', 'loading', 'referrerpolicy', 'width', 'height'],
+		h3: ['id'],
+		h4: ['id'],
+		h5: ['id'],
+		h6: ['id'],
+		input: ['type', 'checked', 'disabled', 'aria-label'],
+		ol: ['start'],
+		span: ['id'],
+		td: ['colspan', 'rowspan'],
+		th: ['colspan', 'rowspan', 'scope']
+	},
+	allowedSchemes: ['https', 'mailto'],
+	allowedSchemesByTag: { img: ['https'] },
+	allowProtocolRelative: false
+} satisfies sanitizeHtml.IOptions;
+
 function cleanReadme(html: string, project: Project) {
 	const branch = project.branch.split('/').map(encodeURIComponent).join('/');
 	const files = `${project.url}/blob/${branch}/`;
 	const raw = `https://raw.githubusercontent.com/${organization}/${project.name}/${branch}/`;
 
 	return sanitizeHtml(html, {
-		allowedTags: [
-			...sanitizeHtml.defaults.allowedTags,
-			'img',
-			'details',
-			'summary',
-			'del',
-			'kbd',
-			'samp',
-			'input'
-		],
-		allowedAttributes: {
-			a: ['href', 'id', 'title'],
-			details: ['open'],
-			div: [{ name: 'align', values: ['center'] }],
-			img: ['src', 'alt', 'title', 'loading', 'referrerpolicy', 'width', 'height'],
-			h3: ['id'],
-			h4: ['id'],
-			h5: ['id'],
-			h6: ['id'],
-			input: ['type', 'checked', 'disabled', 'aria-label'],
-			ol: ['start'],
-			span: ['id'],
-			td: ['colspan', 'rowspan'],
-			th: ['colspan', 'rowspan', 'scope']
-		},
-		allowedSchemes: ['https', 'mailto'],
-		allowedSchemesByTag: { img: ['https'] },
-		allowProtocolRelative: false,
+		...readmeSanitizerOptions,
 		transformTags: {
 			a: (tagName, { href, id, title, class: classes }) => {
 				if (id && classes?.split(/\s+/).includes('anchor')) {

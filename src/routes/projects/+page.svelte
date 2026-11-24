@@ -29,6 +29,8 @@
 			<a
 				class="text-link mb-[3.4rem] shrink-0 [@media(max-width:45rem)]:mb-6"
 				href={githubRepositories}
+				target="_blank"
+				rel="noopener"
 			>
 				<Github size={18} strokeWidth={1.7} aria-hidden="true" /> Randware on GitHub
 				<ArrowUpRight size={15} strokeWidth={1.7} aria-hidden="true" />

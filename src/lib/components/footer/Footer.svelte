@@ -42,6 +42,8 @@
 							<a
 								class="inline-flex min-h-11 items-center gap-1.5 text-[0.875rem] font-medium leading-[1.3] underline-offset-[0.2em] hover:underline [&_svg]:shrink-0"
 								href={url}
+								target="_blank"
+								rel="noopener"
 								aria-label={name}
 								title={name}
 							>

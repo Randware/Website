@@ -11,6 +11,8 @@
 			<a
 				class="group grid min-h-[2.875rem] grid-cols-[1.25rem_1fr_auto] items-center gap-3 text-[0.9375rem] text-ink [&_svg]:text-accent"
 				href={url}
+				target="_blank"
+				rel="noopener"
 			>
 				<Icon size={19} strokeWidth={1.65} aria-hidden="true" />
 				<span class="underline-offset-[0.2em] group-hover:text-accent group-hover:underline">

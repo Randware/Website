@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { ArrowRight, ArrowUpRight, Star } from 'lucide-svelte';
+	import { isExternalLink } from '#lib/external-link.js';
 	import type { Project } from '#lib/projects.js';
 	import ProjectBanner from './ProjectBanner.svelte';
 	import ProjectGlyph from './ProjectGlyph.svelte';
@@ -64,11 +66,24 @@
 		{#if showExternalLinks}
 			<div class="ms-auto flex flex-wrap justify-end gap-x-3.5">
 				{#if project.website}
-					<a class="project-action" href={project.website} aria-label="{project.name} website">
+					{@const external = isExternalLink(project.website, page.url.origin)}
+					<a
+						class="project-action"
+						href={project.website}
+						target={external ? '_blank' : undefined}
+						rel={external ? 'noopener' : undefined}
+						aria-label="{project.name} website"
+					>
 						Website <ArrowUpRight size={15} strokeWidth={1.7} aria-hidden="true" />
 					</a>
 				{/if}
-				<a class="project-action" href={project.url} aria-label="{project.name} source on GitHub">
+				<a
+					class="project-action"
+					href={project.url}
+					target="_blank"
+					rel="noopener"
+					aria-label="{project.name} source on GitHub"
+				>
 					Source <ArrowUpRight size={15} strokeWidth={1.7} aria-hidden="true" />
 				</a>
 			</div>

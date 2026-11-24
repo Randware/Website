@@ -34,7 +34,7 @@
 		<p>GitHub hasn’t reported a language breakdown for this repository.</p>
 	{:else}
 		<p>The language breakdown couldn’t be loaded.</p>
-		<a class="text-link" href={url}>
+		<a class="text-link" href={url} target="_blank" rel="noopener">
 			View on GitHub <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
 		</a>
 	{/if}

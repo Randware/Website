@@ -248,7 +248,7 @@
 				<a class="button pressable" href={resolve('/projects')} data-sveltekit-preload-data="tap">
 					Browse projects <ArrowRight size={17} strokeWidth={1.8} aria-hidden="true" />
 				</a>
-				<a class="text-link" href={githubProfile}>
+				<a class="text-link" href={githubProfile} target="_blank" rel="noopener">
 					<Github size={18} strokeWidth={1.7} aria-hidden="true" /> GitHub
 				</a>
 			</div>

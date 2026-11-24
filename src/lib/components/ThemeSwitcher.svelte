@@ -186,9 +186,14 @@
 				Math.max(x, root.clientWidth - x),
 				Math.max(y, layer.getBoundingClientRect().height - y)
 			) + 1;
+		const timing = getComputedStyle(root);
 		const animation = layer.animate(
 			{ clipPath: [`circle(0px at ${origin})`, `circle(${fullRadius}px at ${origin})`] },
-			{ duration: 390, easing: 'cubic-bezier(.25,.7,.3,1)', fill: 'both' }
+			{
+				duration: Number(timing.getPropertyValue('--theme-reveal-duration-ms')),
+				easing: timing.getPropertyValue('--theme-reveal-easing').trim(),
+				fill: 'both'
+			}
 		);
 		activeTransition = { animation, target: next, width: innerWidth, layer };
 		void animation.finished.then(

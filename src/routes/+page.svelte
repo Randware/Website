@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { beforeNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { ArrowDown, ArrowRight, Github } from 'lucide-svelte';
 	import { onMount } from 'svelte';
@@ -16,12 +17,17 @@
 	let heroFrame: HTMLDivElement;
 	let heroPrint: HTMLDivElement;
 	let heroOutline: HTMLDivElement;
-	let scrollCue: HTMLButtonElement;
+	let scrollCue: HTMLDivElement;
+	let valuesSection: HTMLElement;
 	let valuesHeading: HTMLHeadingElement;
 	let valueStack: HTMLDivElement;
+	let valuesScrollFrame = 0;
 
 	const description =
 		'We’re a group of friends who like making open-source software. Take a look at what we’ve built.';
+	const valuesScrollDuration = 900;
+
+	beforeNavigate(stopValuesScroll);
 
 	onMount(() => {
 		const motion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -134,10 +140,21 @@
 
 		const observer = new ResizeObserver(scheduleMeasure);
 		observer.observe(heroContent);
-		window.addEventListener('scroll', onScroll, { passive: true, signal: listeners.signal });
-		window.addEventListener('resize', onResize, { signal: listeners.signal });
-		window.visualViewport?.addEventListener('resize', onResize, { signal: listeners.signal });
-		motion.addEventListener('change', scheduleMeasure, { signal: listeners.signal });
+		const { signal } = listeners;
+		window.addEventListener('scroll', onScroll, { passive: true, signal });
+		window.addEventListener('resize', onResize, { signal });
+		window.visualViewport?.addEventListener('resize', onResize, { signal });
+		window.addEventListener('wheel', stopValuesScroll, { passive: true, signal });
+		window.addEventListener('pointerdown', stopValuesScroll, { passive: true, signal });
+		window.addEventListener('keydown', stopValuesScroll, { signal });
+		motion.addEventListener(
+			'change',
+			() => {
+				stopValuesScroll();
+				scheduleMeasure();
+			},
+			{ signal }
+		);
 		measure();
 
 		return () => {
@@ -145,6 +162,7 @@
 			observer.disconnect();
 			cancelAnimationFrame(frame);
 			cancelAnimationFrame(measureFrame);
+			stopValuesScroll();
 			heroScrollProgress.set(undefined);
 		};
 	});
@@ -192,12 +210,40 @@
 		};
 	});
 
+	function stopValuesScroll() {
+		cancelAnimationFrame(valuesScrollFrame);
+		valuesScrollFrame = 0;
+	}
+
 	function scrollToValues() {
+		stopValuesScroll();
 		valuesHeading.focus({ preventScroll: true });
-		valuesHeading.scrollIntoView({
-			behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
-			block: 'start'
-		});
+		if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			valuesSection.scrollIntoView({ behavior: 'instant', block: 'start' });
+			return;
+		}
+
+		const root = document.documentElement;
+		const start = window.scrollY;
+		const padding = Number.parseFloat(getComputedStyle(root).scrollPaddingTop) || 0;
+		const end = Math.max(
+			0,
+			Math.min(
+				start + valuesSection.getBoundingClientRect().top - padding,
+				root.scrollHeight - root.clientHeight
+			)
+		);
+		let startedAt: number | undefined;
+
+		function scrollFrame(now: number) {
+			startedAt ??= now;
+			const progress = Math.min((now - startedAt) / valuesScrollDuration, 1);
+			const eased = progress * progress * (3 - 2 * progress);
+			window.scrollTo({ top: start + (end - start) * eased, behavior: 'instant' });
+			valuesScrollFrame = progress < 1 ? requestAnimationFrame(scrollFrame) : 0;
+		}
+
+		valuesScrollFrame = requestAnimationFrame(scrollFrame);
 	}
 </script>
 
@@ -253,15 +299,19 @@
 				</a>
 			</div>
 		</div>
-		<button
-			class="header-control pressable scroll-cue absolute hidden inset-s-[calc(50%-var(--header-control-size)/2)]"
-			type="button"
-			aria-label="Scroll to what we care about"
-			onclick={scrollToValues}
+		<div
+			class="scroll-cue pointer-events-none absolute hidden inset-s-[calc(50%-var(--header-control-size)/2)]"
 			bind:this={scrollCue}
 		>
-			<ArrowDown size={21} strokeWidth={1.8} aria-hidden="true" />
-		</button>
+			<button
+				class="header-control pressable scroll-cue-button pointer-events-auto"
+				type="button"
+				aria-label="Scroll to what we care about"
+				onclick={scrollToValues}
+			>
+				<ArrowDown size={21} strokeWidth={1.8} aria-hidden="true" />
+			</button>
+		</div>
 	</div>
 	<div class="hero-track" aria-hidden="true"></div>
 </section>
@@ -269,6 +319,7 @@
 <section
 	class="border-y-2 border-line bg-wash py-[clamp(2.75rem,6vw,5.25rem)]"
 	aria-labelledby="home-values"
+	bind:this={valuesSection}
 >
 	<div class="shell">
 		<div
@@ -555,11 +606,38 @@
 	}
 
 	.scroll-cue {
-		inset-block-end: calc(clamp(2rem, 3.3vw + 0.75rem, 3.75rem) + env(safe-area-inset-bottom, 0px));
+		inset-block-end: calc(
+			clamp(2.5rem, 3.3vw + 1.25rem, 4.25rem) + env(safe-area-inset-bottom, 0px)
+		);
 	}
 
 	.hero:global([data-scroll-cue]) .scroll-cue {
 		display: grid;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.scroll-cue-button {
+			animation: float-scroll-cue 3.6s ease-in-out infinite;
+			transition:
+				transform 210ms ease-in-out,
+				box-shadow 210ms ease-in-out,
+				background-color 180ms ease;
+		}
+
+		:global(.theme-reveal) .scroll-cue-button,
+		.scroll-cue-button:is(:hover, :focus-visible, :active, :global([data-pressed])) {
+			animation-play-state: paused;
+		}
+
+		@keyframes float-scroll-cue {
+			0%,
+			100% {
+				translate: 0 0;
+			}
+			50% {
+				translate: 0 7px;
+			}
+		}
 	}
 
 	.hero-content {

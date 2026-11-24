@@ -38,6 +38,8 @@
 	--card: light-dark(var(--light-card), var(--dark-card));
 	--paper-edge: light-dark(var(--light-paper-edge), var(--dark-paper-edge));
 	--paper-radius: 0.625rem;
+	--theme-reveal-duration-ms: 760;
+	--theme-reveal-easing: cubic-bezier(0.42, 0, 0.32, 1);
 	/* Paint beyond both positions of Safari's toolbar and the home indicator.
 	   Controls still use the visible viewport and their own safe-area padding. */
 	--viewport-bleed: env(safe-area-inset-bottom, 0px);
@@ -285,7 +287,8 @@ body {
 	}
 
 	:root.theme-reveal::view-transition-new(root) {
-		animation: reveal-theme 390ms cubic-bezier(0.25, 0.7, 0.3, 1) both;
+		animation: reveal-theme calc(var(--theme-reveal-duration-ms) * 1ms) var(--theme-reveal-easing)
+			both;
 	}
 
 	@keyframes reveal-theme {

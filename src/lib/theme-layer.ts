@@ -1,3 +1,18 @@
+function animatedElements(site: HTMLElement) {
+	try {
+		const elements = new Set<Element>();
+		for (const { effect } of site.getAnimations({ subtree: true })) {
+			if (effect && 'target' in effect && effect.target instanceof Element) {
+				elements.add(effect.target);
+			}
+		}
+		return elements;
+	} catch {
+		// The reveal can still copy the current frame without animation inspection.
+		return null;
+	}
+}
+
 // iOS clips native view-transition snapshots at the browser controls. A short-
 // lived, inert copy of the visible page can paint into that area as normal
 // document content. The real page keeps its old theme until the circle finishes.
@@ -21,13 +36,7 @@ export function createThemeLayer(theme: 'light' | 'dark') {
 		document.body.append(layer);
 		const bottom = layer.getBoundingClientRect().height;
 		const header = site.querySelector(':scope > header');
-		const animated = new Set<Element>();
-		for (const animation of site.getAnimations({ subtree: true })) {
-			const effect = animation.effect;
-			if (animation instanceof CSSAnimation && effect instanceof KeyframeEffect && effect.target) {
-				animated.add(effect.target);
-			}
-		}
+		const animated = animatedElements(site);
 
 		function copy(node: Node): Node {
 			if (!(node instanceof HTMLElement)) return node.cloneNode(true);
@@ -49,9 +58,9 @@ export function createThemeLayer(theme: 'light' | 'dark') {
 				}
 			}
 
-			if (animated.has(node)) {
+			const style = animated?.has(node) === false ? null : getComputedStyle(node);
+			if (style && (animated || style.animationName !== 'none')) {
 				// Freeze scroll/drift animations at the frame the user actually sees.
-				const style = getComputedStyle(node);
 				for (const property of ['transform', 'opacity', 'clip-path']) {
 					clone.style.setProperty(property, style.getPropertyValue(property));
 				}

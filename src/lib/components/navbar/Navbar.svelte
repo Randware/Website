@@ -13,12 +13,14 @@
 		{ label: 'About', route: '/about' },
 		{ label: 'Contact', route: '/contact' }
 	] as const;
+	const menuControl =
+		'header-control menu-control pressable pointer-events-auto absolute inset-bs-[calc(2px+var(--header-safe-top)+(var(--header-row-height)-var(--header-control-size))/2)] inset-e-(--gutter)';
 
 	let scrollProgress = $state(0);
 	let menuOpen = $state(false);
 	let enhanced = $state(false);
 	let headerBar: HTMLDivElement;
-	let menuButton: HTMLElement;
+	let menuButton = $state<HTMLButtonElement>();
 
 	function closeMenu() {
 		menuOpen = false;
@@ -33,7 +35,7 @@
 
 		event.preventDefault();
 		closeMenu();
-		menuButton.focus({ preventScroll: true });
+		menuButton?.focus({ preventScroll: true });
 	}
 
 	afterNavigate(closeMenu);
@@ -129,6 +131,26 @@
 	{/each}
 {/snippet}
 
+{#snippet menuIcons()}
+	<span class="menu-icon [grid-area:1/1]" aria-hidden="true">
+		<Menu size={22} strokeWidth={2.1} />
+	</span>
+	<span class="close-icon [grid-area:1/1]" aria-hidden="true">
+		<X size={22} strokeWidth={2.1} />
+	</span>
+{/snippet}
+
+{#snippet mobileNavigation()}
+	<nav
+		id="mobile-navigation"
+		class="mobile-links pointer-events-auto mb-3 mt-1 grid grid-cols-3 gap-3 overflow-y-auto p-1.5 max-block-[calc(100dvh-var(--header-row-height)-2rem)] [@media(max-width:32rem)]:grid-cols-1"
+		aria-label="Main navigation"
+		data-sveltekit-preload-data="tap"
+	>
+		{@render navigationLinks(true)}
+	</nav>
+{/snippet}
+
 <header
 	class="pointer-events-none sticky z-10 inset-bs-0 min-block-(--site-header-height) max-md:[--floating-offset:0.625rem]"
 	data-floating={scrollProgress > 0}
@@ -162,34 +184,35 @@
 			</div>
 		</div>
 
-		<details class="mobile-menu hidden max-md:block" bind:open={menuOpen}>
-			<summary
-				class="header-control menu-control pressable pointer-events-auto absolute list-none inset-bs-[calc(2px+var(--header-safe-top)+(var(--header-row-height)-var(--header-control-size))/2)] inset-e-(--gutter)"
+		{#if enhanced}
+			<button
+				class={[menuControl, 'hidden max-md:grid']}
+				type="button"
 				aria-label="Navigation menu"
 				aria-controls="mobile-navigation"
+				aria-expanded={menuOpen}
 				bind:this={menuButton}
+				onclick={() => (menuOpen = !menuOpen)}
 			>
-				<span class="menu-icon [grid-area:1/1]" aria-hidden="true">
-					<Menu size={22} strokeWidth={2.1} />
-				</span>
-				<span class="close-icon [grid-area:1/1]" aria-hidden="true">
-					<X size={22} strokeWidth={2.1} />
-				</span>
-			</summary>
-
-			<div class="menu-reveal overflow-hidden min-block-0" inert={enhanced && !menuOpen}>
+				{@render menuIcons()}
+			</button>
+			<div class="menu-reveal hidden max-md:grid" inert={!menuOpen}>
 				<div class="overflow-hidden min-block-0">
-					<nav
-						id="mobile-navigation"
-						class="mobile-links pointer-events-auto mb-3 mt-1 grid grid-cols-3 gap-3 overflow-y-auto p-1.5 max-block-[calc(100dvh-var(--header-row-height)-2rem)] [@media(max-width:32rem)]:grid-cols-1"
-						aria-label="Main navigation"
-						data-sveltekit-preload-data="tap"
-					>
-						{@render navigationLinks(true)}
-					</nav>
+					{@render mobileNavigation()}
 				</div>
 			</div>
-		</details>
+		{:else}
+			<details class="mobile-menu hidden max-md:block" bind:open={menuOpen}>
+				<summary
+					class={[menuControl, 'list-none']}
+					aria-label="Navigation menu"
+					aria-controls="mobile-navigation"
+				>
+					{@render menuIcons()}
+				</summary>
+				{@render mobileNavigation()}
+			</details>
+		{/if}
 	</div>
 </header>
 
@@ -354,18 +377,30 @@
 	}
 
 	.close-icon,
-	.mobile-menu[open] .menu-icon {
+	:is(header[data-menu-open='true'], .mobile-menu[open]) .menu-icon {
 		opacity: 0;
 		transform: rotate(-35deg) scale(0.75);
 	}
 
-	.mobile-menu[open] .close-icon {
+	:is(header[data-menu-open='true'], .mobile-menu[open]) .close-icon {
 		opacity: 1;
 		transform: none;
 	}
 
-	.mobile-menu[open] .menu-control {
+	:is(header[data-menu-open='true'], .mobile-menu[open]) .menu-control {
 		@apply border-ink bg-ink text-paper;
+	}
+
+	.menu-reveal {
+		grid-template-rows: 0fr;
+		opacity: 0;
+		transform: translateY(-0.375rem);
+	}
+
+	header[data-menu-open='true'] .menu-reveal {
+		grid-template-rows: 1fr;
+		opacity: 1;
+		transform: none;
 	}
 
 	.mobile-links .nav-link[aria-current] {
@@ -400,40 +435,17 @@
 			}
 		}
 
-		@supports selector(::details-content) {
-			.mobile-menu::details-content {
-				display: grid;
-				opacity: 0;
-				transform: translateY(-0.375rem);
-				transition:
-					opacity 160ms ease-out,
-					transform var(--header-motion),
-					content-visibility 240ms allow-discrete;
-			}
-
-			.mobile-menu[open]::details-content {
-				opacity: 1;
-				transform: none;
+		@media (pointer: coarse) {
+			.header-bar::before {
+				transition: box-shadow var(--header-motion);
 			}
 		}
 
-		@supports not selector(::details-content) {
-			.mobile-menu[open] .menu-reveal {
-				display: grid;
-				animation: reveal-menu var(--header-motion) both;
-			}
-
-			@keyframes reveal-menu {
-				from {
-					opacity: 0;
-					transform: translateY(-0.375rem);
-				}
-
-				to {
-					opacity: 1;
-					transform: none;
-				}
-			}
+		.menu-reveal {
+			transition:
+				grid-template-rows var(--header-motion),
+				opacity 160ms ease-out,
+				transform var(--header-motion);
 		}
 	}
 </style>

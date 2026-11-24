@@ -3,6 +3,11 @@ import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import NodeCache from 'node-cache';
 
+// hooks.server imports this module before rendering starts. Background cache
+// refreshes must retain the server transport, not SvelteKit's temporary SSR
+// fetch wrapper from whichever request happens to be rendering at that moment.
+const serverFetch = globalThis.fetch.bind(globalThis);
+
 type Snapshot<T> = { data: T; updatedAt: number };
 
 const hour = 60 * 60 * 1000;
@@ -100,7 +105,7 @@ export async function githubFetch(url: string, options: RequestInit) {
 	}
 	if (Date.now() < blockedUntil) throw new Error('GitHub requests are paused');
 
-	const response = await fetch(url, options);
+	const response = await serverFetch(url, options);
 	const budgetExhausted = response.headers.get('x-ratelimit-remaining') === '0';
 	const retryHeader = response.headers.get('retry-after');
 	const rateLimited =

@@ -4,6 +4,7 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 		<meta name="author" content="Randware" />
+		<meta name="theme-color" content="#f2f0e3" />
 		<link
 			rel="icon"
 			href="%sveltekit.assets%/favicon-dark.svg"
@@ -16,14 +17,43 @@
 		/>
 		<script>
 			const root = document.documentElement;
+			root.dataset.pageIntro = 'pending';
+			let initialTheme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 			try {
 				const theme = localStorage.getItem('theme');
 				if (theme === 'light' || theme === 'dark') {
 					root.dataset.theme = theme;
+					initialTheme = theme;
 				}
 			} catch {
 				// The browser preference still applies when storage is unavailable.
 			}
+			root.style.colorScheme = initialTheme;
+			root.style.backgroundColor = initialTheme === 'dark' ? '#202020' : '#f2f0e3';
+			document.querySelector('meta[name="theme-color"]').content = root.style.backgroundColor;
+			// A failed application bundle must still leave readable server-rendered
+			// content once the fonts have settled.
+			window.addEventListener(
+				'load',
+				async () => {
+					await document.fonts.ready;
+					setTimeout(
+						() =>
+							requestAnimationFrame(() =>
+								requestAnimationFrame(() => {
+									if (
+										root.dataset.pageIntro === 'pending' &&
+										!root.hasAttribute('data-app-mounted')
+									) {
+										root.dataset.pageIntro = 'ready';
+									}
+								})
+							),
+						2000
+					);
+				},
+				{ once: true }
+			);
 		</script>
 		%sveltekit.head%
 	</head>

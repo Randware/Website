@@ -236,10 +236,20 @@
 				var(--card) calc(100% - 14% * var(--header-detach)),
 				transparent
 			);
-			/* Keep one blur kernel as the paper lifts; its opacity comes from the
-			   surface color instead of rebuilding the filter on every scroll frame. */
+		}
+
+		header[data-floating='true'] .header-bar::after {
+			/* Keep the blur inside the stroke. Safari can then sample the outer
+			   paper surface for its toolbar tint without a backdrop-filter there. */
+			position: absolute;
+			z-index: -2;
+			inset: calc(var(--header-safe-top) + 2px)
+				calc(var(--frame-inset) * var(--header-detach) + 2px) 2px;
+			border-radius: max(0px, calc(var(--paper-radius) * var(--header-detach) - 2px));
 			-webkit-backdrop-filter: blur(16px);
 			backdrop-filter: blur(16px);
+			pointer-events: none;
+			content: '';
 		}
 	}
 

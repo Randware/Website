@@ -16,6 +16,13 @@
 	--paper-edge: light-dark(rgb(32 32 32 / 17%), rgb(0 0 0 / 48%));
 	--paper-shadow: 0.2rem 0.25rem 0 var(--paper-edge);
 	--paper-radius: 0.625rem;
+	/* Paint beyond both positions of Safari's toolbar and the home indicator.
+	   Controls still use the visible viewport and their own safe-area padding. */
+	--viewport-bleed: env(safe-area-inset-bottom, 0px);
+	--viewport-bleed: calc(
+		max(env(safe-area-inset-bottom, 0px) + max(0px, 100lvh - 100svh), var(--screen-bleed, 0px)) +
+			1px
+	);
 	--header-control-size: 2.875rem;
 	--header-row-height: 4.75rem;
 	--site-header-height: calc(var(--header-row-height) + 4px + env(safe-area-inset-top, 0px));
@@ -64,6 +71,37 @@
 
 body {
 	background-color: var(--paper);
+}
+
+.theme-layer {
+	position: absolute;
+	z-index: 100;
+	inset-inline: 0;
+	height: 100vh;
+	height: calc(100lvh + var(--viewport-bleed));
+	overflow: clip;
+	contain: layout paint;
+	isolation: isolate;
+	background: var(--paper);
+	color: var(--ink);
+	pointer-events: none;
+	overflow-anchor: none;
+	will-change: clip-path;
+}
+
+.theme-layer[data-theme='light'] {
+	color-scheme: light;
+}
+.theme-layer[data-theme='dark'] {
+	color-scheme: dark;
+}
+
+.theme-layer *,
+.theme-layer *::before,
+.theme-layer *::after {
+	animation: none !important;
+	transition: none !important;
+	will-change: auto !important;
 }
 
 @supports not (scrollbar-color: auto) {
@@ -242,6 +280,10 @@ h3 {
 }
 
 @media (prefers-reduced-motion: no-preference) {
+	.theme-reveal .artwork .plate {
+		animation-play-state: paused !important;
+	}
+
 	.theme-reveal .site *,
 	.theme-reveal .site *::before,
 	.theme-reveal .site *::after {

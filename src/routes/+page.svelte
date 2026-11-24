@@ -33,6 +33,7 @@
 		let distance = 0;
 		let extra = 0;
 		let paintExtra = 0;
+		let bleed = 0;
 		let gap = 0;
 		let inset = 0;
 		let radius = 0;
@@ -49,11 +50,13 @@
 			// Update only the moving surfaces in the fallback. An inherited scroll
 			// variable forces WebKit to resolve every gradient inside the artwork.
 			if (!nativeScroll && distance) {
+				// A tenth of linear scroll is 0.19 after the shared quadratic easing.
+				const contraction = (paintExtra - bleed) * progress + bleed * Math.min(1, progress / 0.19);
 				heroStage.style.transform = `translateY(${Math.min(distance, Math.max(0, scrollY))}px)`;
-				heroFrame.style.clipPath = `inset(${gap * progress}px ${inset * progress}px ${(paintExtra + gap) * progress}px round ${radius * progress}px)`;
-				heroPrint.style.transform = `translateY(${-paintExtra * progress * 0.5}px)`;
+				heroFrame.style.clipPath = `inset(${gap * progress}px ${inset * progress}px ${contraction + gap * progress}px round ${radius * progress}px)`;
+				heroPrint.style.transform = `translateY(${-contraction * 0.5}px)`;
 				heroContent.style.transform = `translateY(${extra * (1 - progress) * 0.5}px)`;
-				heroOutline.style.inset = `${gap * progress}px ${inset * progress}px ${gap * progress - paintExtra * (1 - progress)}px`;
+				heroOutline.style.inset = `${gap * progress}px ${inset * progress}px ${gap * progress - paintExtra + contraction}px`;
 				heroOutline.style.borderRadius = `${radius * progress}px`;
 				heroOutline.style.opacity = String(progress);
 				scrollCue.style.transform = `translateY(${extra * (1 - progress)}px)`;
@@ -94,6 +97,7 @@
 					element.removeAttribute('style');
 				}
 				paintExtra = heroFrame.getBoundingClientRect().height - stageHeight;
+				bleed = Number.parseFloat(getComputedStyle(heroFrame).paddingBottom);
 				const outlineStyle = getComputedStyle(heroOutline);
 				gap = Number.parseFloat(getComputedStyle(heroStage).paddingTop);
 				inset = Number.parseFloat(outlineStyle.left);
@@ -310,8 +314,11 @@
 		--hero-gap: clamp(1.25rem, 3.3vw, 3rem);
 		--hero-inset: max(var(--gutter), calc((100% - 74rem) / 2));
 		--hero-art-height: calc(100vh - var(--hero-top, var(--site-header-height)));
-		--hero-art-height: calc(100lvh - var(--hero-top, var(--site-header-height)));
+		--hero-art-height: calc(
+			100lvh + var(--viewport-bleed) - var(--hero-top, var(--site-header-height))
+		);
 		--hero-paint-extra: calc(var(--hero-art-height) - var(--hero-stage-height));
+		--hero-screen-extra: calc(var(--hero-paint-extra) - var(--viewport-bleed));
 
 		text-align: center;
 	}
@@ -385,6 +392,7 @@
 		inset: 0 0 auto;
 		height: var(--hero-art-height);
 		border-radius: 0;
+		padding-block-end: var(--viewport-bleed);
 	}
 
 	.hero:global([data-scroll-hero]) .hero-track {
@@ -418,10 +426,12 @@
 
 	.hero:global([data-native-scroll]) .hero-frame {
 		animation-name: contract-hero;
+		animation-timing-function: cubic-bezier(0.333333, 0.350877, 0.666667, 0.684211);
 	}
 
 	.hero:global([data-native-scroll]) .hero-print {
 		animation-name: center-print;
+		animation-timing-function: cubic-bezier(0.333333, 0.350877, 0.666667, 0.684211);
 	}
 
 	.hero:global([data-native-scroll]) .hero-content {
@@ -430,6 +440,7 @@
 
 	.hero:global([data-native-scroll]) .hero-outline {
 		animation-name: outline-hero;
+		animation-timing-function: cubic-bezier(0.333333, 0.350877, 0.666667, 0.684211);
 	}
 
 	.hero:global([data-native-scroll]) .scroll-cue {
@@ -449,6 +460,16 @@
 		from {
 			clip-path: inset(0 0 0 round 0);
 		}
+		10% {
+			/* Withdraw the toolbar overscan first, then follow the original
+			   quadratic contraction so the next section never sits under it. */
+			clip-path: inset(
+				calc(var(--hero-gap) * 0.19) calc(var(--hero-inset) * 0.19)
+					calc(var(--viewport-bleed) + (var(--hero-screen-extra) + var(--hero-gap)) * 0.19) round
+					calc(var(--paper-radius) * 0.19)
+			);
+			animation-timing-function: cubic-bezier(0.333333, 0.666667, 0.666667, 1);
+		}
 		to {
 			clip-path: inset(
 				var(--hero-gap) var(--hero-inset) calc(var(--hero-paint-extra) + var(--hero-gap)) round
@@ -460,6 +481,10 @@
 	@keyframes center-print {
 		from {
 			transform: translateY(0);
+		}
+		10% {
+			transform: translateY(calc((var(--viewport-bleed) + var(--hero-screen-extra) * 0.19) * -0.5));
+			animation-timing-function: cubic-bezier(0.333333, 0.666667, 0.666667, 1);
 		}
 		to {
 			transform: translateY(calc(var(--hero-paint-extra) * -0.5));
@@ -480,6 +505,13 @@
 			inset: 0 0 calc(-1 * var(--hero-paint-extra));
 			border-radius: 0;
 			opacity: 0;
+		}
+		10% {
+			inset: calc(var(--hero-gap) * 0.19) calc(var(--hero-inset) * 0.19)
+				calc(var(--hero-gap) * 0.19 - var(--hero-screen-extra) * 0.81);
+			border-radius: calc(var(--paper-radius) * 0.19);
+			opacity: 0.19;
+			animation-timing-function: cubic-bezier(0.333333, 0.666667, 0.666667, 1);
 		}
 		to {
 			inset: var(--hero-gap) var(--hero-inset);

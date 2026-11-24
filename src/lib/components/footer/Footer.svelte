@@ -63,19 +63,6 @@
 		overflow: hidden;
 	}
 
-	.footer-paper::before {
-		position: absolute;
-		z-index: -1;
-		inset: 0;
-		background-image:
-			repeating-linear-gradient(0deg, transparent 0 11px, var(--line) 11px 12px),
-			repeating-linear-gradient(90deg, transparent 0 11px, var(--line) 11px 12px);
-		mask-image: linear-gradient(90deg, transparent 35%, #000);
-		opacity: 0.18;
-		pointer-events: none;
-		content: '';
-	}
-
 	.footer-main {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) auto;

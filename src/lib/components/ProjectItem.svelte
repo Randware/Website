@@ -185,17 +185,30 @@
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
-		.project-arrow {
-			transition: transform 140ms ease;
+		.project:has(.project-link:focus-visible),
+		.project:is(:active, :global([data-pressed])) {
+			--project-plate-spread: 1;
 		}
 
-		@media (min-width: 48rem) and (hover: hover) and (pointer: fine) {
-			.project:hover,
-			.project:has(.project-link:focus-visible) {
+		.project:has(.project-link:focus-visible) .project-arrow,
+		.project:is(:active, :global([data-pressed])) .project-arrow {
+			transform: translateX(3px);
+		}
+
+		.project-arrow {
+			transition:
+				transform 140ms ease,
+				background-color 140ms ease,
+				border-color 140ms ease,
+				color 140ms ease;
+		}
+
+		@media (hover: hover) {
+			.project:hover {
 				--project-plate-spread: 1;
 			}
 
-			.project:has(.project-link:hover) .project-arrow {
+			.project:hover .project-arrow {
 				transform: translateX(3px);
 			}
 		}

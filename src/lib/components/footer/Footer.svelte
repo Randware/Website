@@ -57,21 +57,10 @@
 		isolation: isolate;
 	}
 
-	.footer-stack::before {
-		position: absolute;
-		z-index: -1;
-		inset: 7px -5px -7px 5px;
-		border: 1px solid var(--line-strong);
-		border-radius: var(--paper-radius);
-		background: color-mix(in srgb, var(--card), var(--ink) 5%);
-		content: '';
-	}
-
 	.footer-paper {
 		position: relative;
 		isolation: isolate;
 		overflow: hidden;
-		box-shadow: none;
 	}
 
 	.footer-paper::before {

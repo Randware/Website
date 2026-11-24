@@ -165,7 +165,7 @@
 
 <style>
 	header {
-		--header-motion: 180ms cubic-bezier(0.2, 0.7, 0.3, 1);
+		--header-motion: 240ms cubic-bezier(0.2, 0.7, 0.3, 1);
 		--header-detach: var(--page-scroll-progress, 0);
 		--header-menu-shadow: 0;
 		--header-safe-top: env(safe-area-inset-top, 0px);
@@ -201,6 +201,8 @@
 		inset: 0 0 auto;
 		padding: calc(2px + var(--header-safe-top)) var(--gutter) 2px;
 		transform: translateY(calc(var(--floating-offset, 0.875rem) * var(--header-detach)));
+		/* Menu expansion only lays out this floating surface and its contents. */
+		contain: layout;
 		-webkit-user-select: none;
 		user-select: none;
 		-webkit-tap-highlight-color: transparent;
@@ -228,24 +230,16 @@
 	}
 
 	@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-		.header-bar::before {
+		header[data-floating='true'] .header-bar::before {
 			background-color: color-mix(
 				in srgb,
 				var(--card) calc(100% - 14% * var(--header-detach)),
 				transparent
 			);
-			-webkit-backdrop-filter: blur(calc(16px * var(--header-detach)));
-			backdrop-filter: blur(calc(16px * var(--header-detach)));
-		}
-	}
-
-	@media (width < 48rem), (pointer: coarse) {
-		.header-bar::before {
-			/* Keep the paper and floating morph without continuously filtering
-			   every pixel scrolling beneath the header on a phone. */
-			background-color: var(--card);
-			-webkit-backdrop-filter: none;
-			backdrop-filter: none;
+			/* Keep one blur kernel as the paper lifts; its opacity comes from the
+			   surface color instead of rebuilding the filter on every scroll frame. */
+			-webkit-backdrop-filter: blur(16px);
+			backdrop-filter: blur(16px);
 		}
 	}
 
@@ -435,15 +429,19 @@
 
 		@supports selector(::details-content) {
 			.mobile-menu::details-content {
+				display: grid;
+				grid-template-rows: 0fr;
 				opacity: 0;
 				transform: translateY(-0.375rem);
 				transition:
-					opacity 140ms ease-out,
+					grid-template-rows var(--header-motion),
+					opacity 160ms ease-out,
 					transform var(--header-motion),
-					content-visibility 180ms allow-discrete;
+					content-visibility 240ms allow-discrete;
 			}
 
 			.mobile-menu[open]::details-content {
+				grid-template-rows: 1fr;
 				opacity: 1;
 				transform: none;
 			}
@@ -451,16 +449,19 @@
 
 		@supports not selector(::details-content) {
 			.mobile-menu[open] .menu-reveal {
+				display: grid;
 				animation: reveal-menu var(--header-motion) both;
 			}
 
 			@keyframes reveal-menu {
 				from {
+					grid-template-rows: 0fr;
 					opacity: 0;
 					transform: translateY(-0.375rem);
 				}
 
 				to {
+					grid-template-rows: 1fr;
 					opacity: 1;
 					transform: none;
 				}

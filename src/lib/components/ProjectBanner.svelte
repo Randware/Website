@@ -109,7 +109,7 @@
 		background: repeating-linear-gradient(90deg, var(--print-mid) 0 1px, transparent 1px 6px);
 	}
 
-	@media (min-width: 48rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+	@media (prefers-reduced-motion: no-preference) {
 		.plate {
 			transition: transform 440ms cubic-bezier(0.19, 0.75, 0.24, 1);
 		}

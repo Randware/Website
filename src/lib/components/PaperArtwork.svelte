@@ -21,9 +21,7 @@
 
 	onMount(() => {
 		if (layout !== 'hero') return;
-		const motion = matchMedia(
-			'(min-width: 48rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)'
-		);
+		const motion = matchMedia('(prefers-reduced-motion: no-preference)');
 		let inView = false;
 		function sync() {
 			running = inView && motion.matches && !document.hidden;
@@ -32,7 +30,7 @@
 			inView = entry.isIntersecting;
 			sync();
 		});
-		observer.observe(element);
+		observer.observe(element.closest('.hero') ?? element);
 		motion.addEventListener('change', sync);
 		document.addEventListener('visibilitychange', sync);
 		return () => {
@@ -263,7 +261,7 @@
 		);
 	}
 
-	@media (min-width: 48rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+	@media (prefers-reduced-motion: no-preference) {
 		.artwork[data-layout='hero'] .plate {
 			animation: drift var(--duration) ease-in-out var(--delay) infinite;
 			animation-play-state: paused;
@@ -271,12 +269,7 @@
 
 		.artwork[data-layout='hero'][data-running='true'] .plate {
 			animation-play-state: running;
-		}
-	}
-
-	@media (width < 48rem), (pointer: coarse) {
-		.plate:nth-child(n + 6) {
-			display: none;
+			will-change: transform;
 		}
 	}
 

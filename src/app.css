@@ -27,15 +27,16 @@
 
 :root {
 	color-scheme: light dark;
-	--paper: light-dark(#f2f0e3, #202020);
-	--ink: light-dark(#202020, #f2f0e3);
-	--card: light-dark(#f8f6eb, #272727);
-	--wash: color-mix(in srgb, var(--paper), var(--ink) 4%);
-	--tint: color-mix(in srgb, var(--paper), var(--ink) 9%);
-	--line: color-mix(in srgb, var(--paper), var(--ink) 32%);
-	--line-strong: color-mix(in srgb, var(--paper), var(--ink) 50%);
-	--paper-edge: light-dark(rgb(32 32 32 / 17%), rgb(0 0 0 / 48%));
-	--paper-shadow: 0.2rem 0.25rem 0 var(--paper-edge);
+	--light-paper: #f2f0e3;
+	--dark-paper: #202020;
+	--light-card: #f8f6eb;
+	--dark-card: #272727;
+	--light-paper-edge: rgb(32 32 32 / 17%);
+	--dark-paper-edge: rgb(0 0 0 / 48%);
+	--paper: light-dark(var(--light-paper), var(--dark-paper));
+	--ink: light-dark(var(--dark-paper), var(--light-paper));
+	--card: light-dark(var(--light-card), var(--dark-card));
+	--paper-edge: light-dark(var(--light-paper-edge), var(--dark-paper-edge));
 	--paper-radius: 0.625rem;
 	/* Paint beyond both positions of Safari's toolbar and the home indicator.
 	   Controls still use the visible viewport and their own safe-area padding. */
@@ -54,11 +55,6 @@
 		env(safe-area-inset-left, 0px),
 		env(safe-area-inset-right, 0px)
 	);
-	--muted: color-mix(in srgb, var(--ink) 75%, var(--paper));
-	--accent: var(--ink);
-	--accent-hover: color-mix(in srgb, var(--ink) 84%, var(--paper));
-	--on-accent: var(--paper);
-	--focus: var(--ink);
 	--scroll-thumb: color-mix(in srgb, var(--ink) 50%, var(--paper));
 	--gutter: max(
 		clamp(1.25rem, 5vw, 4.5rem),
@@ -72,6 +68,20 @@
 	scroll-padding-block-start: calc(var(--site-header-height) + 1.5rem);
 }
 
+:root,
+.theme-layer {
+	--wash: color-mix(in srgb, var(--paper), var(--ink) 4%);
+	--tint: color-mix(in srgb, var(--paper), var(--ink) 9%);
+	--line: color-mix(in srgb, var(--paper), var(--ink) 32%);
+	--line-strong: color-mix(in srgb, var(--paper), var(--ink) 50%);
+	--paper-shadow: 0.2rem 0.25rem 0 var(--paper-edge);
+	--muted: color-mix(in srgb, var(--ink) 75%, var(--paper));
+	--accent: var(--ink);
+	--accent-hover: color-mix(in srgb, var(--ink) 84%, var(--paper));
+	--on-accent: var(--paper);
+	--focus: var(--ink);
+}
+
 @media (width < 48rem) {
 	:root {
 		--header-row-height: 4.125rem;
@@ -79,12 +89,23 @@
 	}
 }
 
-:root[data-theme='light'] {
+/* Explicit colors let the reveal paint both themes at once in WebKit. */
+:root[data-theme='light'],
+.theme-layer[data-theme='light'] {
 	color-scheme: light;
+	--paper: var(--light-paper);
+	--ink: var(--dark-paper);
+	--card: var(--light-card);
+	--paper-edge: var(--light-paper-edge);
 }
 
-:root[data-theme='dark'] {
+:root[data-theme='dark'],
+.theme-layer[data-theme='dark'] {
 	color-scheme: dark;
+	--paper: var(--dark-paper);
+	--ink: var(--light-paper);
+	--card: var(--dark-card);
+	--paper-edge: var(--dark-paper-edge);
 }
 
 body {
@@ -100,11 +121,8 @@ body {
 	will-change: clip-path;
 }
 
-.theme-layer[data-theme='light'] {
-	color-scheme: light;
-}
-.theme-layer[data-theme='dark'] {
-	color-scheme: dark;
+.theme-layer:not([data-toolbar-bleed]) {
+	max-height: var(--theme-layer-page-height);
 }
 
 .theme-layer *,

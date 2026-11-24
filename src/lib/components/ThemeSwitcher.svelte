@@ -4,6 +4,7 @@
 	import { flushSync, onMount } from 'svelte';
 	import { createThemeLayer } from '#lib/theme-layer.js';
 	import { applyTheme, type Theme } from '#lib/theme.js';
+	import { usesTouchViewport } from '#lib/viewport.js';
 
 	let mode = $state<Theme>();
 	let preference: Theme | undefined;
@@ -98,6 +99,7 @@
 			return;
 		}
 		current.interrupted = true;
+		current.layer.removeAttribute('data-toolbar-bleed');
 		// Finish the color change, then blend the cover into the live,
 		// freely scrolling page over a few frames.
 		gestureFrame = requestAnimationFrame(() => {
@@ -152,7 +154,15 @@
 		root.style.setProperty('--theme-radius', `${radius}px`);
 		root.classList.add('theme-reveal');
 
-		if (document.startViewTransition) {
+		// Native snapshots can stop at the mobile toolbar. Keep the live canvas
+		// color while the page layer paints the circle beneath the controls.
+		const paintUnderToolbar = usesTouchViewport();
+		const layer =
+			paintUnderToolbar || !document.startViewTransition
+				? createThemeLayer(next, paintUnderToolbar)
+				: null;
+
+		if (!layer && document.startViewTransition) {
 			const animation = document.startViewTransition(() => {
 				if (activeTransition?.animation === animation) flushSync(() => setTheme(next));
 			});
@@ -163,7 +173,6 @@
 			return;
 		}
 
-		const layer = createThemeLayer(next);
 		if (!layer) {
 			root.classList.remove('theme-reveal');
 			root.style.removeProperty('--theme-origin');

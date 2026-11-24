@@ -228,7 +228,7 @@
 			bind:this={heroOutline}
 		></div>
 		<div
-			class="shell hero-content relative z-1 px-[calc(2px+clamp(0.875rem,3vw,2rem))] py-[calc(2px+clamp(2.375rem,6.75vw,5.5rem))]"
+			class="shell hero-content relative z-1 px-[calc(2px+clamp(0.875rem,3vw,2rem))]"
 			bind:this={heroContent}
 		>
 			<h1
@@ -562,8 +562,21 @@
 		display: grid;
 	}
 
-	.paper-print.hero-print {
-		mask-image: radial-gradient(ellipse 51% 76% at center, transparent 43%, #000 100%);
+	.hero-content {
+		--hero-copy-padding: calc(2px + clamp(2.375rem, 6.75vw, 5.5rem));
+
+		padding-block: var(--hero-copy-padding);
+	}
+
+	.hero-content::before {
+		position: absolute;
+		z-index: -1;
+		inset-block: calc(var(--hero-copy-padding) - clamp(2rem, 3.5vw, 3rem));
+		inset-inline: 0;
+		background: radial-gradient(ellipse closest-side, var(--card) 46%, transparent);
+		opacity: 0.72;
+		pointer-events: none;
+		content: '';
 	}
 
 	.hero:global([data-scroll-hero]) .hero-print {

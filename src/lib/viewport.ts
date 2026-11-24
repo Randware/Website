@@ -11,8 +11,12 @@ export function screenBleed(
 	return fullHeight && short <= 600 ? Math.max(0, Math.ceil(fullHeight - largeHeight)) : 0;
 }
 
+export function usesTouchViewport() {
+	return matchMedia('(pointer: coarse)').matches || CSS.supports('-webkit-touch-callout', 'none');
+}
+
 export function syncViewportBleed() {
-	if (!CSS.supports('-webkit-touch-callout', 'none')) return;
+	if (!usesTouchViewport()) return;
 	const probe = document.createElement('div');
 	probe.style.cssText =
 		'position:absolute;width:0;height:100lvh;visibility:hidden;pointer-events:none';

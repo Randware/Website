@@ -13,9 +13,9 @@ function animatedElements(site: HTMLElement) {
 	}
 }
 
-// Browsers without native view transitions reveal an inert copy of the page
-// in the new theme. The real page keeps its old theme until the circle finishes.
-export function createThemeLayer(theme: 'light' | 'dark') {
+// An inert copy can paint under mobile browser controls and works without native
+// view transitions. The real page keeps its old theme until the circle finishes.
+export function createThemeLayer(theme: 'light' | 'dark', paintUnderToolbar: boolean) {
 	const site = document.querySelector<HTMLElement>('.site');
 	if (!site) return null;
 	const offset = Math.max(0, scrollY);
@@ -27,9 +27,10 @@ export function createThemeLayer(theme: 'light' | 'dark') {
 	layer.inert = true;
 	layer.setAttribute('aria-hidden', 'true');
 	layer.style.top = `${offset}px`;
-	// Overscan may paint below the viewport, but must never add a temporary
-	// scroll range at the end of the document and clamp a gesture on removal.
-	layer.style.maxHeight = `${Math.max(0, documentHeight - offset)}px`;
+	// The layer can reach the toolbar even at the end of the page. The theme
+	// switcher removes this extra space as soon as the user starts a gesture.
+	layer.toggleAttribute('data-toolbar-bleed', paintUnderToolbar);
+	layer.style.setProperty('--theme-layer-page-height', `${Math.max(0, documentHeight - offset)}px`);
 	try {
 		// Read the overscan height without inserting the copied page yet.
 		document.body.append(layer);

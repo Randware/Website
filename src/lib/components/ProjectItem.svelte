@@ -9,12 +9,12 @@
 		project,
 		artworkTimestamp,
 		heading = 'h3',
-		showSource = false
+		showExternalLinks = false
 	}: {
 		project: Project;
 		artworkTimestamp: number;
 		heading?: 'h2' | 'h3';
-		showSource?: boolean;
+		showExternalLinks?: boolean;
 	} = $props();
 </script>
 
@@ -51,9 +51,9 @@
 	</div>
 
 	<div
-		class="flex min-h-[3.25rem] min-w-0 flex-wrap items-center justify-between gap-x-3.5 border-t border-dashed border-line px-(--project-gutter) py-0.5 text-[0.875rem] text-muted wrap-anywhere"
+		class="flex min-h-[3.25rem] min-w-0 flex-wrap items-center gap-x-3.5 border-t border-dashed border-line px-(--project-gutter) py-0.5 text-[0.875rem] text-muted wrap-anywhere"
 	>
-		<div class="flex min-w-0 flex-wrap items-center gap-x-3.5">
+		<div class="flex min-w-0 flex-[1_1_4rem] flex-wrap items-center gap-x-3.5">
 			{#if project.language}<span>{project.language}</span>{/if}
 			<span class="inline-flex items-center gap-[0.35rem]" title="{project.stars} GitHub stars">
 				<Star size={15} strokeWidth={1.7} aria-hidden="true" />
@@ -61,20 +61,27 @@
 				{project.stars}
 			</span>
 		</div>
-		{#if showSource}
-			<a
-				class="relative z-2 inline-flex min-h-11 items-center gap-[0.35rem] font-medium text-ink underline-offset-[0.2em] hover:underline"
-				href={project.url}
-				aria-label="{project.name} source on GitHub"
-			>
-				Source <ArrowUpRight size={15} strokeWidth={1.7} aria-hidden="true" />
-			</a>
+		{#if showExternalLinks}
+			<div class="ms-auto flex flex-wrap justify-end gap-x-3.5">
+				{#if project.website}
+					<a class="project-action" href={project.website} aria-label="{project.name} website">
+						Website <ArrowUpRight size={15} strokeWidth={1.7} aria-hidden="true" />
+					</a>
+				{/if}
+				<a class="project-action" href={project.url} aria-label="{project.name} source on GitHub">
+					Source <ArrowUpRight size={15} strokeWidth={1.7} aria-hidden="true" />
+				</a>
+			</div>
 		{/if}
 	</div>
 </article>
 
 <style lang="postcss">
 	@reference '../../app.css';
+
+	.project-action {
+		@apply relative z-2 inline-flex min-h-11 items-center gap-[0.35rem] font-medium text-ink underline-offset-[0.2em] hover:underline;
+	}
 
 	.project:has(.project-link:focus-visible) .project-arrow {
 		@apply border-ink bg-ink text-paper;

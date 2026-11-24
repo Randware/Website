@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { ArrowLeft, ArrowUpRight, Github, Star } from 'lucide-svelte';
+	import { ArrowLeft, ArrowUpRight, Star } from 'lucide-svelte';
 	import ProjectBanner from '#lib/components/ProjectBanner.svelte';
 	import ProjectFallback from '#lib/components/ProjectFallback.svelte';
 	import ProjectGlyph from '#lib/components/ProjectGlyph.svelte';
@@ -61,15 +61,24 @@
 					</p>
 				{/if}
 				<div class="flex flex-wrap items-center gap-x-4 gap-y-2.5 text-[0.9375rem] text-muted">
-					<a class="button pressable" href={project.url}>
-						<Github size={18} strokeWidth={1.7} aria-hidden="true" /> View on GitHub
-						<ArrowUpRight size={16} strokeWidth={1.7} aria-hidden="true" />
-					</a>
-					<span class="inline-flex items-center gap-[0.35rem]" title="{project.stars} GitHub stars">
-						<Star size={17} strokeWidth={1.7} aria-hidden="true" />
-						<span class="sr-only">GitHub stars:</span>
-						{project.stars}
-					</span>
+					{#if project.website}
+						<a class="text-link" href={project.website}>
+							Website <ArrowUpRight size={16} strokeWidth={1.7} aria-hidden="true" />
+						</a>
+					{/if}
+					<div class="flex flex-wrap items-center gap-x-4 gap-y-2.5">
+						<a class="text-link" href={project.url}>
+							Source <ArrowUpRight size={16} strokeWidth={1.7} aria-hidden="true" />
+						</a>
+						<span
+							class="inline-flex items-center gap-[0.35rem]"
+							title="{project.stars} GitHub stars"
+						>
+							<Star size={17} strokeWidth={1.7} aria-hidden="true" />
+							<span class="sr-only">GitHub stars:</span>
+							{project.stars}
+						</span>
+					</div>
 				</div>
 			</div>
 		</header>

@@ -9,6 +9,7 @@ export interface Project {
 	stars: number;
 	branch: string;
 	url: string;
+	website?: string;
 }
 
 export interface ProjectLanguage {

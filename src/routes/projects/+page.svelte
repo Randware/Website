@@ -45,7 +45,12 @@
 		<ul class="project-grid" aria-label="Randware repositories">
 			{#each data.projects as project (project.name)}
 				<li>
-					<ProjectItem {project} artworkTimestamp={data.artworkTimestamp} heading="h2" showSource />
+					<ProjectItem
+						{project}
+						artworkTimestamp={data.artworkTimestamp}
+						heading="h2"
+						showExternalLinks
+					/>
 				</li>
 			{/each}
 		</ul>

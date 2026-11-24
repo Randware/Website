@@ -6,6 +6,7 @@ import { cached, githubFetch } from './github-cache.js';
 type GitHubRepository = {
 	name: string;
 	description: string | null;
+	homepage: string | null;
 	language: string | null;
 	stargazers_count: number;
 	default_branch: string;
@@ -78,7 +79,8 @@ async function fetchProjects() {
 				language: repo.language,
 				stars: repo.stargazers_count,
 				branch: repo.default_branch,
-				url: repo.html_url
+				url: repo.html_url,
+				website: repositoryWebsite(repo.homepage)
 			});
 		}
 
@@ -88,6 +90,17 @@ async function fetchProjects() {
 	return projects.sort(
 		(a, b) => b.stars - a.stars || a.name.localeCompare(b.name, 'en', { sensitivity: 'base' })
 	);
+}
+
+function repositoryWebsite(homepage: string | null) {
+	if (!homepage) return;
+
+	try {
+		const url = new URL(homepage);
+		return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : undefined;
+	} catch {
+		return;
+	}
 }
 
 async function fetchPinnedNames() {

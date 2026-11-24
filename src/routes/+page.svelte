@@ -52,7 +52,8 @@
 			if (!nativeScroll && distance) {
 				// A tenth of linear scroll is 0.19 after the shared quadratic easing.
 				const contraction = (paintExtra - bleed) * progress + bleed * Math.min(1, progress / 0.19);
-				heroStage.style.transform = `translateY(${Math.min(distance, Math.max(0, scrollY))}px)`;
+				const heldScroll = Math.min(distance, Math.max(0, scrollY));
+				heroStage.style.transform = `translateY(calc(${heldScroll}px + var(--hero-stage-offset) * ${progress}))`;
 				heroFrame.style.clipPath = `inset(${gap * progress}px ${inset * progress}px ${contraction + gap * progress}px round ${radius * progress}px)`;
 				heroPrint.style.transform = `translateY(${-contraction * 0.5}px)`;
 				heroContent.style.transform = `translateY(${extra * (1 - progress) * 0.5}px)`;
@@ -76,7 +77,9 @@
 			const viewportHeight = visibleViewportHeight(root.clientHeight, window.visualViewport);
 			const stageHeight = heroStage.getBoundingClientRect().height;
 			extra = viewportHeight - top - stageHeight;
-			const enabled = !motion.matches && viewportHeight - top > heroContent.offsetHeight + 88;
+			const enabled =
+				!motion.matches &&
+				viewportHeight - top > Math.max(stageHeight, heroContent.offsetHeight + 88);
 			measuredWidth = root.clientWidth;
 			distance = enabled ? Math.min(320, Math.max(160, viewportHeight * 0.34)) : 0;
 			hero.style.setProperty('--hero-top', `${top}px`);
@@ -251,7 +254,7 @@
 			</div>
 		</div>
 		<button
-			class="header-control pressable scroll-cue absolute hidden inset-be-[calc(var(--hero-gap)+0.75rem+env(safe-area-inset-bottom,0px))] inset-s-[calc(50%-var(--header-control-size)/2)]"
+			class="header-control pressable scroll-cue absolute hidden inset-s-[calc(50%-var(--header-control-size)/2)]"
 			type="button"
 			aria-label="Scroll to what we care about"
 			onclick={scrollToValues}
@@ -352,14 +355,32 @@
 	@reference '../app.css';
 
 	.hero {
-		--hero-gap: clamp(1.25rem, 3.3vw, 3rem);
+		--hero-gap: 4.25rem;
 		--hero-inset: max(var(--gutter), calc((100% - 74rem) / 2));
+		--hero-viewport-height: 100vh;
+		/* Use half the gap a fully centered card would leave under the header,
+		   plus 0.25rem, with the standard hero gap as the minimum. */
+		--hero-extra-gap: max(
+			0px,
+			calc(
+				(var(--hero-viewport-height) - var(--hero-stage-height)) * 0.25 -
+					(var(--hero-top) + var(--header-floating-offset) + var(--hero-gap)) * 0.5 + 0.25rem
+			)
+		);
+		--hero-stage-offset: calc(var(--header-floating-offset) + var(--hero-extra-gap));
+		--hero-easing: cubic-bezier(0.333333, 0.666667, 0.666667, 1);
 		--hero-art-height: calc(100vh - var(--hero-top, var(--site-header-height)));
 		--hero-art-height: calc(
 			100lvh + var(--viewport-bleed) - var(--hero-top, var(--site-header-height))
 		);
 		--hero-paint-extra: calc(var(--hero-art-height) - var(--hero-stage-height));
 		--hero-screen-extra: calc(var(--hero-paint-extra) - var(--viewport-bleed));
+	}
+
+	@supports (height: 100dvh) {
+		.hero {
+			--hero-viewport-height: 100dvh;
+		}
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
@@ -397,7 +418,7 @@
 	}
 
 	.hero:global([data-scroll-hero]) .hero-track {
-		height: var(--hero-scroll-distance);
+		height: calc(var(--hero-scroll-distance) + var(--hero-stage-offset) + var(--hero-extra-gap));
 	}
 
 	.hero:global([data-scroll-hero]) .hero-outline {
@@ -418,15 +439,15 @@
 	.hero:global([data-native-scroll])
 		:is(.hero-stage, .hero-frame, .hero-print, .hero-content, .hero-outline, .scroll-cue) {
 		animation-duration: 1s;
-		animation-timing-function: cubic-bezier(0.333333, 0.666667, 0.666667, 1);
+		animation-timing-function: var(--hero-easing);
 		animation-fill-mode: both;
 		animation-timeline: scroll(root block);
 		animation-range: 0px var(--hero-scroll-distance);
 	}
 
 	.hero:global([data-native-scroll]) .hero-stage {
-		animation-name: hold-hero;
-		animation-timing-function: linear;
+		animation-name: hold-hero, center-hero;
+		animation-timing-function: linear, var(--hero-easing);
 	}
 
 	.hero:global([data-native-scroll]) .hero-frame {
@@ -458,6 +479,15 @@
 		}
 		to {
 			transform: translateY(var(--hero-scroll-distance));
+		}
+	}
+
+	@keyframes center-hero {
+		from {
+			translate: 0 0;
+		}
+		to {
+			translate: 0 var(--hero-stage-offset);
 		}
 	}
 
@@ -522,6 +552,10 @@
 		to {
 			transform: translateY(0);
 		}
+	}
+
+	.scroll-cue {
+		inset-block-end: calc(clamp(2rem, 3.3vw + 0.75rem, 3.75rem) + env(safe-area-inset-bottom, 0px));
 	}
 
 	.hero:global([data-scroll-cue]) .scroll-cue {

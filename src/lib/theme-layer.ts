@@ -13,9 +13,8 @@ function animatedElements(site: HTMLElement) {
 	}
 }
 
-// iOS clips native view-transition snapshots at the browser controls. A short-
-// lived, inert copy of the visible page can paint into that area as normal
-// document content. The real page keeps its old theme until the circle finishes.
+// Browsers without native view transitions reveal an inert copy of the page
+// in the new theme. The real page keeps its old theme until the circle finishes.
 export function createThemeLayer(theme: 'light' | 'dark') {
 	const site = document.querySelector<HTMLElement>('.site');
 	if (!site) return null;
@@ -61,7 +60,7 @@ export function createThemeLayer(theme: 'light' | 'dark') {
 			const style = animated?.has(node) === false ? null : getComputedStyle(node);
 			if (style && (animated || style.animationName !== 'none')) {
 				// Freeze scroll/drift animations at the frame the user actually sees.
-				for (const property of ['transform', 'opacity', 'clip-path']) {
+				for (const property of ['transform', 'translate', 'opacity', 'clip-path']) {
 					clone.style.setProperty(property, style.getPropertyValue(property));
 				}
 			}

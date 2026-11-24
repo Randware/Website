@@ -11,7 +11,6 @@
 		| {
 				animation: ViewTransition | Animation;
 				target: Theme;
-				scroll: number;
 				width: number;
 				layer?: HTMLElement;
 				dismiss?: Animation;
@@ -99,8 +98,7 @@
 			return;
 		}
 		current.interrupted = true;
-		// Never measure/rebuild a snapshot or force layout in a touch/scroll
-		// handler. Finish its color change, then blend the cover into the live,
+		// Finish the color change, then blend the cover into the live,
 		// freely scrolling page over a few frames.
 		gestureFrame = requestAnimationFrame(() => {
 			gestureFrame = 0;
@@ -154,52 +152,49 @@
 		root.style.setProperty('--theme-radius', `${radius}px`);
 		root.classList.add('theme-reveal');
 
-		if (CSS.supports('-webkit-touch-callout', 'none') || !document.startViewTransition) {
-			const layer = createThemeLayer(next);
-			if (!layer) {
-				root.classList.remove('theme-reveal');
-				root.style.removeProperty('--theme-origin');
-				root.style.removeProperty('--theme-radius');
-				setTheme(next);
-				return;
-			}
-			const fullRadius =
-				Math.hypot(
-					Math.max(x, root.clientWidth - x),
-					Math.max(y, layer.getBoundingClientRect().height - y)
-				) + 1;
-			const animation = layer.animate(
-				{ clipPath: [`circle(0px at ${origin})`, `circle(${fullRadius}px at ${origin})`] },
-				{ duration: 390, easing: 'cubic-bezier(.25,.7,.3,1)', fill: 'both' }
-			);
-			activeTransition = { animation, target: next, scroll: scrollY, width: innerWidth, layer };
-			void animation.finished.then(
-				() => {
-					if (activeTransition?.animation !== animation || activeTransition.interrupted) return;
-					flushSync(() => setTheme(next));
-					// Let the real page paint with transitions still disabled before
-					// removing its cover. Otherwise Safari can coalesce both changes
-					// and start a second color transition after the circle has finished.
-					settleFrame = requestAnimationFrame(() => {
-						settleFrame = requestAnimationFrame(() => clearReveal(animation));
-					});
-				},
-				() => clearReveal(animation)
-			);
+		if (document.startViewTransition) {
+			const animation = document.startViewTransition(() => {
+				if (activeTransition?.animation === animation) flushSync(() => setTheme(next));
+			});
+			activeTransition = { animation, target: next, width: innerWidth };
+			void animation.ready.catch(() => {});
+			const finish = () => clearReveal(animation);
+			void animation.finished.then(finish, finish);
 			return;
 		}
 
-		const animation = document.startViewTransition(() => {
-			if (activeTransition?.animation === animation) flushSync(() => setTheme(next));
-		});
-		activeTransition = { animation, target: next, scroll: scrollY, width: innerWidth };
-		void animation.ready.catch(() => {});
-		const finish = () => clearReveal(animation);
-		void animation.finished.then(finish, finish);
-	}
+		const layer = createThemeLayer(next);
+		if (!layer) {
+			root.classList.remove('theme-reveal');
+			root.style.removeProperty('--theme-origin');
+			root.style.removeProperty('--theme-radius');
+			setTheme(next);
+			return;
+		}
 
-	function onScroll() {
-		if (activeTransition && Math.abs(scrollY - activeTransition.scroll) > 1) dismissForGesture();
+		const fullRadius =
+			Math.hypot(
+				Math.max(x, root.clientWidth - x),
+				Math.max(y, layer.getBoundingClientRect().height - y)
+			) + 1;
+		const animation = layer.animate(
+			{ clipPath: [`circle(0px at ${origin})`, `circle(${fullRadius}px at ${origin})`] },
+			{ duration: 390, easing: 'cubic-bezier(.25,.7,.3,1)', fill: 'both' }
+		);
+		activeTransition = { animation, target: next, width: innerWidth, layer };
+		void animation.finished.then(
+			() => {
+				if (activeTransition?.animation !== animation || activeTransition.interrupted) return;
+				flushSync(() => setTheme(next));
+				// Let the real page paint with transitions still disabled before
+				// removing its cover. Otherwise Safari can coalesce both changes
+				// and start a second color transition after the circle has finished.
+				settleFrame = requestAnimationFrame(() => {
+					settleFrame = requestAnimationFrame(() => clearReveal(animation));
+				});
+			},
+			() => clearReveal(animation)
+		);
 	}
 
 	function onResize() {
@@ -209,7 +204,7 @@
 	}
 </script>
 
-<svelte:window onscroll={onScroll} onpointerdown={dismissForGesture} onresize={onResize} />
+<svelte:window onpointerdown={dismissForGesture} onwheel={dismissForGesture} onresize={onResize} />
 
 <button
 	data-theme-toggle

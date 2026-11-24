@@ -152,7 +152,7 @@
 {/snippet}
 
 <header
-	class="pointer-events-none sticky z-10 inset-bs-0 min-block-(--site-header-height) max-md:[--floating-offset:0.625rem]"
+	class="pointer-events-none sticky z-10 inset-bs-0 min-block-(--site-header-height)"
 	data-floating={scrollProgress > 0}
 	data-detaching={scrollProgress > 0 && scrollProgress < 1 ? '' : undefined}
 	data-menu-open={menuOpen}
@@ -245,7 +245,7 @@
 	}
 
 	.header-bar {
-		transform: translateY(calc(var(--floating-offset, 0.875rem) * var(--header-detach)));
+		transform: translateY(calc(var(--header-floating-offset) * var(--header-detach)));
 		/* Menu expansion only lays out this floating surface and its contents. */
 		contain: layout;
 		-webkit-tap-highlight-color: transparent;

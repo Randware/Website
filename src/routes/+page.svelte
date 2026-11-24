@@ -56,15 +56,16 @@
 				heroFrame.style.clipPath = `inset(${gap * progress}px ${inset * progress}px ${contraction + gap * progress}px round ${radius * progress}px)`;
 				heroPrint.style.transform = `translateY(${-contraction * 0.5}px)`;
 				heroContent.style.transform = `translateY(${extra * (1 - progress) * 0.5}px)`;
-				heroOutline.style.inset = `${gap * progress}px ${inset * progress}px ${gap * progress - paintExtra + contraction}px`;
-				heroOutline.style.borderRadius = `${radius * progress}px`;
-				heroOutline.style.opacity = String(progress);
+				// The outline fades in during the last quarter of the scroll, once
+				// the clipping edge is close to the outline's final position.
+				heroOutline.style.opacity = String(Math.max(0, (progress - 0.9375) * 16));
 				scrollCue.style.transform = `translateY(${extra * (1 - progress)}px)`;
 			}
 			scrollCue.style.opacity = String(Math.min(1, Math.max(0, (0.4 - progress) * 5)));
 			heroScrollProgress.set(distance ? progress : undefined);
 			hero.toggleAttribute('data-scroll-cue', distance > 0 && progress < 0.4);
 			hero.toggleAttribute('data-hero-active', distance > 0 && progress < 1);
+			hero.toggleAttribute('data-hero-contracting', progress > 0 && progress < 1);
 			previousProgress = progress;
 		}
 
@@ -399,6 +400,10 @@
 		height: var(--hero-scroll-distance);
 	}
 
+	.hero:global([data-scroll-hero]) .hero-outline {
+		opacity: 0;
+	}
+
 	.hero:global([data-hero-active]) :is(.hero-stage, .hero-print, .hero-content) {
 		will-change: transform;
 	}
@@ -501,21 +506,11 @@
 	}
 
 	@keyframes outline-hero {
-		from {
-			inset: 0 0 calc(-1 * var(--hero-paint-extra));
-			border-radius: 0;
+		from,
+		75% {
 			opacity: 0;
 		}
-		10% {
-			inset: calc(var(--hero-gap) * 0.19) calc(var(--hero-inset) * 0.19)
-				calc(var(--hero-gap) * 0.19 - var(--hero-screen-extra) * 0.81);
-			border-radius: calc(var(--paper-radius) * 0.19);
-			opacity: 0.19;
-			animation-timing-function: cubic-bezier(0.333333, 0.666667, 0.666667, 1);
-		}
 		to {
-			inset: var(--hero-gap) var(--hero-inset);
-			border-radius: var(--paper-radius);
 			opacity: 1;
 		}
 	}

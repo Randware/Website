@@ -132,6 +132,7 @@
 <header
 	class="pointer-events-none sticky z-10 inset-bs-0 min-block-(--site-header-height) max-md:[--floating-offset:0.625rem]"
 	data-floating={scrollProgress > 0}
+	data-detaching={scrollProgress > 0 && scrollProgress < 1 ? '' : undefined}
 	data-menu-open={menuOpen}
 	style:--page-scroll-progress={scrollProgress}
 >
@@ -248,27 +249,78 @@
 		content: '';
 	}
 
-	@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-		header[data-floating='true'] .header-bar::before {
-			background-color: color-mix(
-				in srgb,
-				var(--card) calc(100% - 14% * var(--header-detach)),
-				transparent
-			);
+	@media (pointer: coarse) {
+		/* Crossfade two painted shapes so scrolling doesn't resize or repaint
+		   the rounded stroke and shadow, or blur the content behind the bar. */
+		.header-bar::before {
+			inset-inline: 0;
+			border-color: transparent;
+			border-bottom-color: var(--line-strong);
+			border-radius: 0;
+			box-shadow: none;
+			opacity: min(1, 2 * (1 - var(--header-detach)));
+		}
+
+		header[data-menu-open='true'] .header-bar::before {
+			box-shadow: 0 0.25rem 0 var(--paper-edge);
+		}
+
+		header[data-floating='true']:not([data-detaching]) .header-bar::before {
+			pointer-events: none;
+		}
+
+		.header-bar::after {
+			position: absolute;
+			z-index: -2;
+			inset: var(--header-safe-top) var(--frame-inset) 0;
+			border: 2px solid var(--line-strong);
+			border-radius: var(--paper-radius);
+			background: var(--card);
+			box-shadow:
+				var(--paper-shadow),
+				0 0.4rem 1.2rem rgb(0 0 0 / 10%);
+			opacity: min(1, 2 * var(--header-detach));
+			content: '';
 		}
 
 		header[data-floating='true'] .header-bar::after {
-			/* Keep the blur inside the stroke. Safari can then sample the outer
+			pointer-events: auto;
+		}
+
+		header[data-detaching] .header-bar {
+			will-change: transform;
+		}
+
+		header[data-detaching]::before,
+		header[data-detaching] .header-bar::before,
+		header[data-detaching] .header-bar::after {
+			will-change: opacity;
+		}
+	}
+
+	@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+		@media (not (pointer: coarse)) {
+			header[data-floating='true'] .header-bar::before {
+				background-color: color-mix(
+					in srgb,
+					var(--card) calc(100% - 14% * var(--header-detach)),
+					transparent
+				);
+			}
+
+			header[data-floating='true'] .header-bar::after {
+				/* Keep the blur inside the stroke. Safari can then sample the outer
 			   paper surface for its toolbar tint without a backdrop-filter there. */
-			position: absolute;
-			z-index: -2;
-			inset: calc(var(--header-safe-top) + 2px)
-				calc(var(--frame-inset) * var(--header-detach) + 2px) 2px;
-			border-radius: max(0px, calc(var(--paper-radius) * var(--header-detach) - 2px));
-			-webkit-backdrop-filter: blur(16px);
-			backdrop-filter: blur(16px);
-			pointer-events: none;
-			content: '';
+				position: absolute;
+				z-index: -2;
+				inset: calc(var(--header-safe-top) + 2px)
+					calc(var(--frame-inset) * var(--header-detach) + 2px) 2px;
+				border-radius: max(0px, calc(var(--paper-radius) * var(--header-detach) - 2px));
+				-webkit-backdrop-filter: blur(16px);
+				backdrop-filter: blur(16px);
+				pointer-events: none;
+				content: '';
+			}
 		}
 	}
 
@@ -351,18 +403,15 @@
 		@supports selector(::details-content) {
 			.mobile-menu::details-content {
 				display: grid;
-				grid-template-rows: 0fr;
 				opacity: 0;
 				transform: translateY(-0.375rem);
 				transition:
-					grid-template-rows var(--header-motion),
 					opacity 160ms ease-out,
 					transform var(--header-motion),
 					content-visibility 240ms allow-discrete;
 			}
 
 			.mobile-menu[open]::details-content {
-				grid-template-rows: 1fr;
 				opacity: 1;
 				transform: none;
 			}
@@ -376,13 +425,11 @@
 
 			@keyframes reveal-menu {
 				from {
-					grid-template-rows: 0fr;
 					opacity: 0;
 					transform: translateY(-0.375rem);
 				}
 
 				to {
-					grid-template-rows: 1fr;
 					opacity: 1;
 					transform: none;
 				}

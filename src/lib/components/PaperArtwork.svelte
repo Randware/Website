@@ -12,6 +12,7 @@
 		minWidth: number;
 		height?: number;
 		angle?: number;
+		driftOnTouch?: boolean;
 	};
 
 	let { seed, layout = 'hero' }: { seed: number; layout?: Layout } = $props();
@@ -59,8 +60,8 @@
 			{ x: range(83, 96), y: rightHeight, width: range(30, 43), minWidth: 148 },
 			{ x: range(17, 30), y: rightHeight, width: range(18, 29), minWidth: 96 },
 			{ x: range(70, 83), y: leftHeight, width: range(18, 29), minWidth: 96 },
-			{ x: range(2, 12), y: range(34, 68), width: range(8, 14), minWidth: 48 },
-			{ x: range(88, 98), y: range(34, 68), width: range(8, 14), minWidth: 48 }
+			{ x: range(2, 12), y: range(34, 68), width: range(8, 14), minWidth: 48, driftOnTouch: true },
+			{ x: range(88, 98), y: range(34, 68), width: range(8, 14), minWidth: 48, driftOnTouch: true }
 		];
 		const slots: Placement[] =
 			layout === 'panels'
@@ -128,6 +129,7 @@
 			class="plate absolute left-(--x) top-(--y) aspect-(--ratio) h-[var(--height,auto)] w-[clamp(var(--min-width),var(--width),31rem)] rounded-lg border border-(--print-ink) opacity-(--ink-strength)"
 			data-pattern={plate.pattern}
 			data-shape={plate.shape}
+			data-touch-drift={plate.driftOnTouch ? '' : undefined}
 			style:--x="{plate.x}%"
 			style:--y="{plate.y}%"
 			style:--width="{plate.width}%"
@@ -262,6 +264,19 @@
 		.artwork[data-layout='hero'][data-running='true'] .plate {
 			animation-play-state: running;
 			will-change: transform;
+		}
+
+		@media (pointer: coarse) {
+			/* Keep the large gradient surfaces still on touch devices. */
+			.artwork[data-layout='hero'] .plate:not([data-touch-drift]) {
+				animation: none;
+				will-change: auto;
+			}
+
+			:global(.hero[data-hero-contracting]) .artwork[data-running='true'] .plate {
+				animation-play-state: paused;
+				will-change: auto;
+			}
 		}
 	}
 

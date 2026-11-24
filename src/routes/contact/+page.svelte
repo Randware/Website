@@ -13,16 +13,18 @@
 	/>
 </svelte:head>
 
-<div class="shell contact">
+<div class="shell pb-[clamp(3rem,7vw,6rem)]">
 	<header class="page-heading">
 		<h1>Contact</h1>
 		<p>Find the people behind Randware and the places we share our work.</p>
 	</header>
 
-	<div class="contact-grid">
+	<div
+		class="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-x-[clamp(1.125rem,4vw,3.25rem)] gap-y-8 border-t border-line pt-[clamp(1.5rem,3vw,2.25rem)] [@media(max-width:48rem)]:grid-cols-1"
+	>
 		<section aria-labelledby="members">
-			<h2 id="members">Members</h2>
-			<ul class="member-grid">
+			<h2 class="mb-4 text-[clamp(1.65rem,3.4vw,2.25rem)] scroll-mbs-5" id="members">Members</h2>
+			<ul class="grid grid-cols-2 gap-4 [@media(max-width:31rem)]:grid-cols-1">
 				{#each members as { name, avatar, links } (name)}
 					<li><UserLinkCollection {name} {avatar} {links} /></li>
 				{/each}
@@ -30,9 +32,11 @@
 		</section>
 
 		<section aria-labelledby="organization">
-			<h2 id="organization">Randware</h2>
-			<div class="organization-card paper-panel">
-				<div class="organization-mark" aria-hidden="true">
+			<h2 class="mb-4 text-[clamp(1.65rem,3.4vw,2.25rem)] scroll-mbs-5" id="organization">
+				Randware
+			</h2>
+			<div class="paper-panel bg-wash p-[clamp(1.125rem,2.5vw,1.5rem)]">
+				<div class="mb-3.5 grid size-18 place-items-center text-ink" aria-hidden="true">
 					<RandwareLogo size={56} />
 				</div>
 				<LinkCollection links={organizationLinks} label="Randware profiles" />
@@ -40,55 +44,3 @@
 		</section>
 	</div>
 </div>
-
-<style>
-	.contact {
-		padding-bottom: clamp(3rem, 7vw, 6rem);
-	}
-
-	.contact-grid {
-		display: grid;
-		grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-		gap: 2rem clamp(1.125rem, 4vw, 3.25rem);
-		padding-top: clamp(1.5rem, 3vw, 2.25rem);
-		border-top: 1px solid var(--line);
-	}
-
-	h2 {
-		margin-bottom: 1rem;
-		font-size: clamp(1.65rem, 3.4vw, 2.25rem);
-		scroll-margin-block-start: 1.25rem;
-	}
-
-	.member-grid {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 1rem;
-	}
-
-	.organization-card {
-		padding: clamp(1.125rem, 2.5vw, 1.5rem);
-		background: var(--wash);
-	}
-
-	.organization-mark {
-		display: grid;
-		width: 4.5rem;
-		height: 4.5rem;
-		place-items: center;
-		margin-bottom: 0.875rem;
-		color: var(--ink);
-	}
-
-	@media (max-width: 48rem) {
-		.contact-grid {
-			grid-template-columns: minmax(0, 1fr);
-		}
-	}
-
-	@media (max-width: 31rem) {
-		.member-grid {
-			grid-template-columns: minmax(0, 1fr);
-		}
-	}
-</style>

@@ -104,54 +104,83 @@
 		{@const current = page.route.id === route}
 		{@const inSection = page.route.id?.startsWith(`${route}/`)}
 		<a
-			class="nav-link"
-			class:pressable={mobile}
+			class={[
+				'nav-link',
+				mobile
+					? [
+							'pressable flex min-block-13 items-center justify-between gap-1 px-[clamp(0.375rem,1.6vw,1rem)] py-2',
+							'rounded-paper border-[1.5px] border-line-strong bg-card [--press-shadow:var(--line)] [--press-x:1px] [--press-y:2px]',
+							'font-serif text-[clamp(0.875rem,2.6vw,1.125rem)] font-bold leading-[1.15] tracking-[-0.04em] wrap-anywhere text-ink',
+							'[@media(max-width:32rem)]:min-block-12 [@media(max-width:32rem)]:px-3.5 [@media(max-width:32rem)]:text-[1.125rem]'
+						]
+					: 'relative grid min-h-11 place-items-center text-[clamp(1rem,1.6vw,1.125rem)] font-semibold text-muted'
+			]}
 			href={resolve(route)}
 			aria-current={current ? 'page' : inSection ? 'location' : undefined}
 			onclick={closeMenu}
 		>
 			<span>{label}</span>
 			{#if mobile}
-				<span class="tab-arrow" aria-hidden="true"><ArrowRight size={18} strokeWidth={1.8} /></span>
+				<span class="tab-arrow shrink-0" aria-hidden="true">
+					<ArrowRight size={18} strokeWidth={1.8} />
+				</span>
 			{/if}
 		</a>
 	{/each}
 {/snippet}
 
 <header
+	class="pointer-events-none sticky z-10 inset-bs-0 min-block-(--site-header-height) max-md:[--floating-offset:0.625rem]"
 	data-floating={scrollProgress > 0}
 	data-menu-open={menuOpen}
 	style:--page-scroll-progress={scrollProgress}
 >
-	<div class="header-bar" bind:this={headerBar}>
-		<div class="header-inner">
+	<div
+		class="header-bar absolute inset-x-0 top-0 z-0 select-none px-(--gutter) pb-0.5 pt-[calc(2px+var(--header-safe-top))]"
+		bind:this={headerBar}
+	>
+		<div
+			class={[
+				'pointer-events-auto mx-auto grid min-h-(--header-row-height) max-w-[74rem] items-center',
+				'grid-cols-[minmax(max-content,1fr)_auto_minmax(max-content,1fr)] gap-[clamp(0.875rem,2.4vw,2rem)]',
+				'max-md:grid-cols-[1fr_auto] max-md:gap-4 max-md:pe-[calc(var(--header-control-size)+0.5rem)]'
+			]}
+		>
 			<Brand size={56} showName={false} />
 
-			<nav class="desktop-links" aria-label="Main navigation" data-sveltekit-preload-data="tap">
+			<nav
+				class="desktop-links flex items-center gap-[clamp(1rem,3vw,2.375rem)] max-md:hidden"
+				aria-label="Main navigation"
+				data-sveltekit-preload-data="tap"
+			>
 				{@render navigationLinks(false)}
 			</nav>
 
-			<div class="theme-control">
+			<div class="justify-self-end">
 				<ThemeSwitcher />
 			</div>
 		</div>
 
-		<details class="mobile-menu" bind:open={menuOpen}>
+		<details class="mobile-menu hidden max-md:block" bind:open={menuOpen}>
 			<summary
-				class="header-control menu-control pressable"
+				class="header-control menu-control pressable pointer-events-auto absolute list-none inset-bs-[calc(2px+var(--header-safe-top)+(var(--header-row-height)-var(--header-control-size))/2)] inset-e-(--gutter)"
 				aria-label="Navigation menu"
 				aria-controls="mobile-navigation"
 				bind:this={menuButton}
 			>
-				<span class="menu-icon" aria-hidden="true"><Menu size={22} strokeWidth={2.1} /></span>
-				<span class="close-icon" aria-hidden="true"><X size={22} strokeWidth={2.1} /></span>
+				<span class="menu-icon [grid-area:1/1]" aria-hidden="true">
+					<Menu size={22} strokeWidth={2.1} />
+				</span>
+				<span class="close-icon [grid-area:1/1]" aria-hidden="true">
+					<X size={22} strokeWidth={2.1} />
+				</span>
 			</summary>
 
-			<div class="menu-reveal" inert={enhanced && !menuOpen}>
-				<div class="menu-clip">
+			<div class="menu-reveal overflow-hidden min-block-0" inert={enhanced && !menuOpen}>
+				<div class="overflow-hidden min-block-0">
 					<nav
 						id="mobile-navigation"
-						class="mobile-links"
+						class="mobile-links pointer-events-auto mb-3 mt-1 grid grid-cols-3 gap-3 overflow-y-auto p-1.5 max-block-[calc(100dvh-var(--header-row-height)-2rem)] [@media(max-width:32rem)]:grid-cols-1"
 						aria-label="Main navigation"
 						data-sveltekit-preload-data="tap"
 					>
@@ -163,18 +192,14 @@
 	</div>
 </header>
 
-<style>
+<style lang="postcss">
+	@reference '../../../app.css';
+
 	header {
 		--header-motion: 240ms cubic-bezier(0.2, 0.7, 0.3, 1);
 		--header-detach: var(--page-scroll-progress, 0);
 		--header-menu-shadow: 0;
 		--header-safe-top: env(safe-area-inset-top, 0px);
-
-		position: sticky;
-		z-index: 10;
-		inset-block-start: 0;
-		min-block-size: var(--site-header-height);
-		pointer-events: none;
 	}
 
 	header[data-menu-open='true'] {
@@ -196,15 +221,9 @@
 	}
 
 	.header-bar {
-		position: absolute;
-		z-index: 0;
-		inset: 0 0 auto;
-		padding: calc(2px + var(--header-safe-top)) var(--gutter) 2px;
 		transform: translateY(calc(var(--floating-offset, 0.875rem) * var(--header-detach)));
 		/* Menu expansion only lays out this floating surface and its contents. */
 		contain: layout;
-		-webkit-user-select: none;
-		user-select: none;
 		-webkit-tap-highlight-color: transparent;
 	}
 
@@ -253,50 +272,9 @@
 		}
 	}
 
-	.header-inner {
-		display: grid;
-		max-width: 74rem;
-		min-height: var(--header-row-height);
-		grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
-		align-items: center;
-		gap: clamp(0.875rem, 2.4vw, 2rem);
-		margin-inline: auto;
-		pointer-events: auto;
-	}
-
-	.theme-control {
-		justify-self: end;
-	}
-
-	.desktop-links {
-		display: flex;
-		align-items: center;
-		gap: clamp(1rem, 3vw, 2.375rem);
-	}
-
-	.nav-link {
-		display: grid;
-		min-height: 2.75rem;
-		place-items: center;
-		color: var(--muted);
-		font-size: clamp(1rem, 1.6vw, 1.125rem);
-		font-weight: 600;
-	}
-
-	.desktop-links .nav-link {
-		position: relative;
-	}
-
 	.desktop-links .nav-link::after {
-		position: absolute;
-		inset: auto 0 0.3rem;
-		height: 2px;
-		border-radius: 1px;
-		background: currentColor;
-		opacity: 0;
+		@apply absolute inset-x-0 bottom-[0.3rem] h-0.5 origin-left rounded-[1px] bg-current opacity-0 content-[''];
 		transform: scaleX(0);
-		transform-origin: left;
-		content: '';
 	}
 
 	.desktop-links .nav-link:is([aria-current], :focus-visible) {
@@ -319,27 +297,8 @@
 		}
 	}
 
-	.mobile-menu {
-		display: none;
-	}
-
-	.menu-control {
-		position: absolute;
-		inset-block-start: calc(
-			2px + var(--header-safe-top) + (var(--header-row-height) - var(--header-control-size)) / 2
-		);
-		inset-inline-end: var(--gutter);
-		list-style: none;
-		pointer-events: auto;
-	}
-
 	.menu-control::-webkit-details-marker {
 		display: none;
-	}
-
-	.menu-icon,
-	.close-icon {
-		grid-area: 1 / 1;
 	}
 
 	.close-icon,
@@ -354,59 +313,11 @@
 	}
 
 	.mobile-menu[open] .menu-control {
-		border-color: var(--ink);
-		background: var(--ink);
-		color: var(--paper);
-	}
-
-	.menu-reveal,
-	.menu-clip {
-		min-block-size: 0;
-		overflow: hidden;
-	}
-
-	.mobile-links {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 0.75rem;
-		max-block-size: calc(100dvh - var(--header-row-height) - 2rem);
-		margin-block: 0.25rem 0.75rem;
-		overflow-y: auto;
-		padding: 0.375rem;
-		pointer-events: auto;
-	}
-
-	.mobile-links .nav-link {
-		--press-x: 1px;
-		--press-y: 2px;
-		--press-shadow: var(--line);
-
-		display: flex;
-		min-block-size: 3.25rem;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.25rem;
-		padding: 0.5rem clamp(0.375rem, 1.6vw, 1rem);
-		border: 1.5px solid var(--line-strong);
-		border-radius: var(--paper-radius);
-		background: var(--card);
-		color: var(--ink);
-		font-family: var(--serif);
-		font-size: clamp(0.875rem, 2.6vw, 1.125rem);
-		font-weight: 700;
-		letter-spacing: -0.04em;
-		line-height: 1.15;
-		overflow-wrap: anywhere;
-	}
-
-	.tab-arrow {
-		flex-shrink: 0;
+		@apply border-ink bg-ink text-paper;
 	}
 
 	.mobile-links .nav-link[aria-current] {
-		border-color: var(--ink);
-		background: var(--ink);
-		color: var(--paper);
+		@apply border-ink bg-ink text-paper;
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
@@ -476,38 +387,6 @@
 					transform: none;
 				}
 			}
-		}
-	}
-
-	@media (width < 48rem) {
-		header {
-			--floating-offset: 0.625rem;
-		}
-
-		.header-inner {
-			grid-template-columns: 1fr auto;
-			gap: 1rem;
-			padding-inline-end: calc(var(--header-control-size) + 0.5rem);
-		}
-
-		.desktop-links {
-			display: none;
-		}
-
-		.mobile-menu {
-			display: block;
-		}
-	}
-
-	@media (max-width: 32rem) {
-		.mobile-links {
-			grid-template-columns: minmax(0, 1fr);
-		}
-
-		.mobile-links .nav-link {
-			min-block-size: 3rem;
-			padding-inline: 0.875rem;
-			font-size: 1.125rem;
 		}
 	}
 </style>

@@ -5,39 +5,17 @@
 	let { name, avatar, links }: { name: string; avatar: string; links: SocialLink[] } = $props();
 </script>
 
-<article class="paper-panel">
-	<div class="profile-heading">
-		<img src={avatar} alt="" width="72" height="72" />
-		<h3>{name}</h3>
+<article class="paper-panel h-full min-w-0 p-[clamp(1.125rem,2.5vw,1.5rem)]">
+	<div class="mb-3.5 flex flex-wrap items-center gap-x-4 gap-y-3">
+		<img
+			class="size-18 rounded-paper border border-line object-cover"
+			src={avatar}
+			alt=""
+			width="72"
+			height="72"
+		/>
+		<h3 class="text-[1.625rem]">{name}</h3>
 	</div>
 
 	<LinkCollection {links} label="{name} profiles" />
 </article>
-
-<style>
-	article {
-		height: 100%;
-		min-width: 0;
-		padding: clamp(1.125rem, 2.5vw, 1.5rem);
-	}
-
-	.profile-heading {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.75rem 1rem;
-		margin-bottom: 0.875rem;
-	}
-
-	img {
-		width: 4.5rem;
-		height: 4.5rem;
-		border: 1px solid var(--line);
-		border-radius: var(--paper-radius);
-		object-fit: cover;
-	}
-
-	h3 {
-		font-size: 1.625rem;
-	}
-</style>

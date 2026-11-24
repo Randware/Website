@@ -3,35 +3,14 @@
 	const initial = $derived([...name][0]);
 </script>
 
-<span class="glyph" aria-hidden="true">
+<span
+	class={[
+		'relative grid aspect-square shrink-0 place-items-center inline-[var(--glyph-size,3.5rem)]',
+		'rounded-paper border-2 border-line-strong bg-ink [box-shadow:2px_2px_0_var(--paper-edge)]',
+		'font-serif text-[calc(var(--glyph-size,3.5rem)*0.52)] font-bold leading-none text-paper',
+		"before:absolute before:inset-[3px] before:rounded-[calc(var(--paper-radius)-4px)] before:border before:border-dashed before:border-current before:opacity-30 before:content-['']"
+	]}
+	aria-hidden="true"
+>
 	{initial}
 </span>
-
-<style>
-	.glyph {
-		position: relative;
-		display: grid;
-		inline-size: var(--glyph-size, 3.5rem);
-		aspect-ratio: 1;
-		flex-shrink: 0;
-		place-items: center;
-		border: 2px solid var(--line-strong);
-		border-radius: var(--paper-radius);
-		background: var(--ink);
-		box-shadow: 2px 2px 0 var(--paper-edge);
-		color: var(--paper);
-		font-family: var(--serif);
-		font-size: calc(var(--glyph-size, 3.5rem) * 0.52);
-		font-weight: 700;
-		line-height: 1;
-	}
-
-	.glyph::before {
-		position: absolute;
-		inset: 3px;
-		border: 1px dashed currentColor;
-		border-radius: calc(var(--paper-radius) - 4px);
-		opacity: 0.3;
-		content: '';
-	}
-</style>

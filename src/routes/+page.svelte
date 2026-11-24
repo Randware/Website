@@ -204,18 +204,43 @@
 	<meta property="og:description" content={description} />
 </svelte:head>
 
-<section class="hero" aria-labelledby="home-title" bind:this={hero}>
-	<div class="hero-stage" bind:this={heroStage}>
-		<div class="hero-frame" aria-hidden="true" bind:this={heroFrame}>
-			<div class="paper-print hero-print" bind:this={heroPrint}>
+<section class="hero text-center" aria-labelledby="home-title" bind:this={hero}>
+	<div class="hero-stage relative isolate z-1 py-(--hero-gap)" bind:this={heroStage}>
+		<div
+			class="hero-frame pointer-events-none absolute -z-1 isolate overflow-hidden rounded-paper bg-card [inset:var(--hero-gap)_var(--hero-inset)]"
+			aria-hidden="true"
+			bind:this={heroFrame}
+		>
+			<div
+				class="paper-print hero-print pointer-events-none absolute inset-0 -z-1 overflow-hidden bg-wash [contain:layout_paint]"
+				bind:this={heroPrint}
+			>
 				<PaperArtwork seed={data.headlineArtworkSeed} />
 			</div>
 		</div>
-		<div class="hero-outline" aria-hidden="true" bind:this={heroOutline}></div>
-		<div class="shell hero-content" bind:this={heroContent}>
-			<h1 id="home-title">Random software you might enjoy</h1>
-			<p class="intro">We ❤️ software</p>
-			<div class="hero-links">
+		<div
+			class="hero-outline pointer-events-none absolute z-0 rounded-paper border-2 border-line-strong shadow-paper [inset:var(--hero-gap)_var(--hero-inset)]"
+			aria-hidden="true"
+			bind:this={heroOutline}
+		></div>
+		<div
+			class="shell hero-content relative z-1 px-[calc(2px+clamp(0.875rem,3vw,2rem))] py-[calc(2px+clamp(2.375rem,6.75vw,5.5rem))]"
+			bind:this={heroContent}
+		>
+			<h1
+				class="mx-auto max-w-[21ch] text-balance text-[clamp(2.5rem,5.7vw,5.25rem)] leading-[1.1] tracking-[-0.055em]"
+				id="home-title"
+			>
+				Random software you might enjoy
+			</h1>
+			<p
+				class="mx-auto mt-5 max-w-lg text-balance text-[clamp(1.0625rem,1.65vw,1.25rem)] leading-[1.55] text-muted"
+			>
+				We ❤️ software
+			</p>
+			<div
+				class="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 [@media(max-width:38rem)]:mt-5 [@media(max-width:38rem)]:gap-x-4"
+			>
 				<a class="button pressable" href={resolve('/projects')} data-sveltekit-preload-data="tap">
 					Browse projects <ArrowRight size={17} strokeWidth={1.8} aria-hidden="true" />
 				</a>
@@ -225,7 +250,7 @@
 			</div>
 		</div>
 		<button
-			class="header-control pressable scroll-cue"
+			class="header-control pressable scroll-cue absolute hidden inset-be-[calc(var(--hero-gap)+0.75rem+env(safe-area-inset-bottom,0px))] inset-s-[calc(50%-var(--header-control-size)/2)]"
 			type="button"
 			aria-label="Scroll to what we care about"
 			onclick={scrollToValues}
@@ -237,9 +262,14 @@
 	<div class="hero-track" aria-hidden="true"></div>
 </section>
 
-<section class="values" aria-labelledby="home-values">
+<section
+	class="border-y-2 border-line bg-wash py-[clamp(2.75rem,6vw,5.25rem)]"
+	aria-labelledby="home-values"
+>
 	<div class="shell">
-		<div class="section-top">
+		<div
+			class="mb-6 flex flex-wrap items-center justify-between gap-x-4 [@media(max-width:38rem)]:mb-3.5"
+		>
 			<h2 class="section-heading" id="home-values" bind:this={valuesHeading} tabindex="-1">
 				What we care about
 			</h2>
@@ -247,8 +277,11 @@
 				About us <ArrowRight size={17} strokeWidth={1.8} aria-hidden="true" />
 			</a>
 		</div>
-		<div class="value-stack" bind:this={valueStack}>
-			<div class="paper-print values-print" aria-hidden="true">
+		<div class="relative isolate grid gap-[clamp(0.875rem,1.75vw,1.375rem)]" bind:this={valueStack}>
+			<div
+				class="paper-print values-print pointer-events-none absolute inset-0 -z-1 overflow-hidden rounded-paper-inner bg-wash [contain:layout_paint]"
+				aria-hidden="true"
+			>
 				<PaperArtwork layout="panels" seed={data.valuesArtworkSeed} />
 			</div>
 			<section class="value paper-panel" aria-labelledby="value-open-source">
@@ -284,8 +317,13 @@
 	</div>
 </section>
 
-<section class="shell projects" aria-labelledby="home-projects">
-	<div class="section-top">
+<section
+	class="shell pb-[clamp(3.5rem,7vw,6rem)] pt-[clamp(2.25rem,5vw,4.25rem)]"
+	aria-labelledby="home-projects"
+>
+	<div
+		class="mb-6 flex flex-wrap items-center justify-between gap-x-4 [@media(max-width:38rem)]:mb-3.5"
+	>
 		<h2 class="section-heading" id="home-projects">Selected projects</h2>
 		{#if data.featuredProjects?.length}
 			<a class="text-link" href={resolve('/projects')} data-sveltekit-preload-data="tap">
@@ -309,7 +347,9 @@
 	{/if}
 </section>
 
-<style>
+<style lang="postcss">
+	@reference '../app.css';
+
 	.hero {
 		--hero-gap: clamp(1.25rem, 3.3vw, 3rem);
 		--hero-inset: max(var(--gutter), calc((100% - 74rem) / 2));
@@ -319,46 +359,6 @@
 		);
 		--hero-paint-extra: calc(var(--hero-art-height) - var(--hero-stage-height));
 		--hero-screen-extra: calc(var(--hero-paint-extra) - var(--viewport-bleed));
-
-		text-align: center;
-	}
-
-	.hero-stage,
-	.value-stack {
-		position: relative;
-		isolation: isolate;
-	}
-
-	.hero-stage {
-		z-index: 1;
-		padding-block: var(--hero-gap);
-	}
-
-	.hero-content {
-		position: relative;
-		z-index: 1;
-		padding: calc(2px + clamp(2.375rem, 6.75vw, 5.5rem)) calc(2px + clamp(0.875rem, 3vw, 2rem));
-	}
-
-	.hero-frame,
-	.hero-outline {
-		position: absolute;
-		inset: var(--hero-gap) var(--hero-inset);
-		border-radius: var(--paper-radius);
-		pointer-events: none;
-	}
-
-	.hero-frame {
-		z-index: -1;
-		isolation: isolate;
-		overflow: hidden;
-		background: var(--card);
-	}
-
-	.hero-outline {
-		z-index: 0;
-		border: 2px solid var(--line-strong);
-		box-shadow: 0.2rem 0.25rem 0 var(--paper-edge);
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
@@ -529,76 +529,17 @@
 		}
 	}
 
-	.scroll-cue {
-		position: absolute;
-		inset-block-end: calc(var(--hero-gap) + 0.75rem + env(safe-area-inset-bottom, 0px));
-		inset-inline-start: calc(50% - var(--header-control-size) / 2);
-		display: none;
-	}
-
 	.hero:global([data-scroll-cue]) .scroll-cue {
 		display: grid;
 	}
 
-	h1 {
-		max-width: 21ch;
-		margin-inline: auto;
-		font-size: clamp(2.5rem, 5.7vw, 5.25rem);
-		letter-spacing: -0.055em;
-		line-height: 1.1;
-		text-wrap: balance;
-	}
-
-	.intro {
-		max-width: 32rem;
-		margin: 1.25rem auto 0;
-		color: var(--muted);
-		font-size: clamp(1.0625rem, 1.65vw, 1.25rem);
-		line-height: 1.55;
-		text-wrap: balance;
-	}
-
-	.hero-links {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: center;
-		gap: 0.5rem 1.5rem;
-		margin-top: 1.75rem;
-	}
-
 	.paper-print.hero-print {
-		border-radius: 0;
 		mask-image: radial-gradient(ellipse 51% 76% at center, transparent 43%, #000 100%);
 	}
 
 	.hero:global([data-scroll-hero]) .hero-print {
 		inset: 0 0 auto;
 		height: var(--hero-art-height);
-	}
-
-	.projects {
-		padding-block: clamp(2.25rem, 5vw, 4.25rem) clamp(3.5rem, 7vw, 6rem);
-	}
-
-	.section-top {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: space-between;
-		column-gap: 1rem;
-		margin-bottom: 1.5rem;
-	}
-
-	.values {
-		padding-block: clamp(2.75rem, 6vw, 5.25rem);
-		border-block: 2px solid var(--line);
-		background: var(--wash);
-	}
-
-	.value-stack {
-		display: grid;
-		gap: clamp(0.875rem, 1.75vw, 1.375rem);
 	}
 
 	.value {
@@ -611,38 +552,25 @@
 	}
 
 	.value-copy {
-		max-inline-size: min(68%, 42rem);
-		padding: clamp(1.125rem, 3vw, 2.375rem);
+		@apply max-inline-[min(68%,42rem)] p-[clamp(1.125rem,3vw,2.375rem)] max-sm:max-inline-none;
 	}
 
 	.value h3 {
-		font-size: clamp(1.375rem, 3vw, 2.25rem);
-		letter-spacing: -0.02em;
+		@apply text-[clamp(1.375rem,3vw,2.25rem)] tracking-[-0.02em];
 	}
 
 	.value p {
-		max-inline-size: 50ch;
-		margin-top: 0.75rem;
-		color: var(--muted);
-		font-size: clamp(1rem, 1.6vw, 1.125rem);
+		@apply mt-3 text-[clamp(1rem,1.6vw,1.125rem)] text-muted max-inline-[50ch];
 	}
 
 	.paper-print {
 		--print-grid: color-mix(in srgb, var(--ink) 10%, transparent);
 		--print-ink: color-mix(in srgb, var(--ink) 24%, transparent);
 
-		position: absolute;
-		z-index: -1;
-		inset: 0;
-		overflow: hidden;
-		border-radius: calc(var(--paper-radius) - 2px);
-		background-color: var(--wash);
 		background-image:
 			linear-gradient(var(--print-grid) 1px, transparent 1px),
 			linear-gradient(90deg, var(--print-grid) 1px, transparent 1px);
 		background-size: 12px 12px;
-		pointer-events: none;
-		contain: layout paint;
 	}
 
 	.values-print {
@@ -651,10 +579,6 @@
 	}
 
 	@media (width < 40rem) {
-		.value-copy {
-			max-inline-size: none;
-		}
-
 		.value {
 			background: linear-gradient(
 				to right,
@@ -666,17 +590,6 @@
 
 		.values-print {
 			mask-image: linear-gradient(to right, transparent 38%, rgb(0 0 0 / 72%) 100%);
-		}
-	}
-
-	@media (max-width: 38rem) {
-		.hero-links {
-			margin-top: 1.25rem;
-			column-gap: 1rem;
-		}
-
-		.section-top {
-			margin-bottom: 0.875rem;
 		}
 	}
 </style>

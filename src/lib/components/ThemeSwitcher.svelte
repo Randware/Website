@@ -213,7 +213,7 @@
 
 <button
 	data-theme-toggle
-	class="header-control pressable"
+	class="header-control pressable disabled:invisible"
 	type="button"
 	onclick={toggle}
 	disabled={!mode}
@@ -221,19 +221,11 @@
 	aria-label={label}
 	title={label}
 >
-	<span class="sun" aria-hidden="true"><Sun size={21} strokeWidth={2.1} /></span>
-	<span class="moon" aria-hidden="true"><Moon size={20} strokeWidth={2.1} /></span>
+	<span class="sun [grid-area:1/1]" aria-hidden="true"><Sun size={21} strokeWidth={2.1} /></span>
+	<span class="moon [grid-area:1/1]" aria-hidden="true"><Moon size={20} strokeWidth={2.1} /></span>
 </button>
 
 <style>
-	button:disabled {
-		visibility: hidden;
-	}
-
-	span {
-		grid-area: 1 / 1;
-	}
-
 	.sun,
 	button.dark .moon {
 		opacity: 0;

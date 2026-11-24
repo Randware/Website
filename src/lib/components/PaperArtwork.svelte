@@ -110,7 +110,7 @@
 </script>
 
 <div
-	class="artwork"
+	class="artwork absolute inset-0"
 	data-layout={layout}
 	data-seed={seed}
 	data-running={running}
@@ -118,14 +118,14 @@
 	aria-hidden="true"
 >
 	<div
-		class="band"
+		class="band absolute left-1/2 top-(--y) h-[clamp(1.5rem,5vw,4rem)] w-[120%] border-y border-(--faint-print)"
 		style:--y="{artwork.band.y}%"
 		style:--angle="{artwork.band.angle}deg"
-		style:--spacing="{artwork.band.spacing}px"
+		style:--print-spacing="{artwork.band.spacing}px"
 	></div>
 	{#each artwork.plates as plate (plate.pattern)}
 		<div
-			class="plate"
+			class="plate absolute left-(--x) top-(--y) aspect-(--ratio) h-[var(--height,auto)] w-[clamp(var(--min-width),var(--width),31rem)] rounded-lg border border-(--print-ink) opacity-(--ink-strength)"
 			data-pattern={plate.pattern}
 			data-shape={plate.shape}
 			style:--x="{plate.x}%"
@@ -135,7 +135,7 @@
 			style:--height={plate.height === undefined ? undefined : `${plate.height}%`}
 			style:--ratio={plate.ratio}
 			style:--angle="{plate.angle}deg"
-			style:--spacing="{plate.spacing}px"
+			style:--print-spacing="{plate.spacing}px"
 			style:--ray-step="{plate.rayStep}deg"
 			style:--focus-x="{plate.focusX}%"
 			style:--focus-y="{plate.focusY}%"
@@ -149,51 +149,39 @@
 	{/each}
 </div>
 
-<style>
+<style lang="postcss">
+	@reference '../../app.css';
+
 	.artwork {
 		--faint-print: color-mix(in srgb, var(--print-ink) 56%, transparent);
-
-		position: absolute;
-		inset: 0;
 	}
 
 	.band,
 	.plate {
-		position: absolute;
-		top: var(--y);
-		left: var(--x, 50%);
 		rotate: var(--angle);
 		translate: -50% -50%;
 	}
 
 	.band {
-		width: 120%;
-		height: clamp(1.5rem, 5vw, 4rem);
-		border-block: 1px solid var(--faint-print);
 		background:
 			linear-gradient(
 				transparent calc(50% - 0.5px),
 				var(--faint-print) calc(50% - 0.5px) calc(50% + 0.5px),
 				transparent calc(50% + 0.5px)
 			),
-			repeating-linear-gradient(90deg, var(--faint-print) 0 1px, transparent 1px var(--spacing));
+			repeating-linear-gradient(
+				90deg,
+				var(--faint-print) 0 1px,
+				transparent 1px var(--print-spacing)
+			);
 	}
 
 	.artwork[data-layout='panels'] .band {
-		left: 86%;
-		width: clamp(2.25rem, 7%, 5.75rem);
-		height: 115%;
-		border: 1px solid var(--faint-print);
-		background: repeating-linear-gradient(var(--faint-print) 0 1px, transparent 1px var(--spacing));
-	}
-
-	.plate {
-		width: clamp(var(--min-width), var(--width), 31rem);
-		height: var(--height, auto);
-		aspect-ratio: var(--ratio);
-		border: 1px solid var(--print-ink);
-		border-radius: 0.5rem;
-		opacity: var(--ink-strength);
+		@apply left-[86%] h-[115%] w-[clamp(2.25rem,7%,5.75rem)] border;
+		background: repeating-linear-gradient(
+			var(--faint-print) 0 1px,
+			transparent 1px var(--print-spacing)
+		);
 	}
 
 	.plate[data-shape='arch'] {
@@ -217,7 +205,7 @@
 		background-image: repeating-radial-gradient(
 			circle at var(--focus-x) var(--focus-y),
 			var(--print-ink) 0 1px,
-			transparent 1px var(--spacing)
+			transparent 1px var(--print-spacing)
 		);
 	}
 
@@ -231,33 +219,37 @@
 
 	.plate[data-pattern='hatch'] {
 		background-image:
-			repeating-linear-gradient(45deg, var(--faint-print) 0 1px, transparent 1px var(--spacing)),
-			repeating-linear-gradient(-45deg, var(--faint-print) 0 1px, transparent 1px var(--spacing));
+			repeating-linear-gradient(
+				45deg,
+				var(--faint-print) 0 1px,
+				transparent 1px var(--print-spacing)
+			),
+			repeating-linear-gradient(
+				-45deg,
+				var(--faint-print) 0 1px,
+				transparent 1px var(--print-spacing)
+			);
 	}
 
 	.plate[data-pattern='pinholes'] {
 		background-image: radial-gradient(circle, var(--print-ink) 0.7px, transparent 1.05px);
-		background-size: var(--spacing) var(--spacing);
+		background-size: var(--print-spacing) var(--print-spacing);
 	}
 
 	.plate[data-pattern='frames']::before,
 	.plate[data-pattern='frames']::after {
-		position: absolute;
-		inset: var(--spacing);
-		border: 1px solid var(--print-ink);
-		border-radius: inherit;
-		content: '';
+		@apply absolute inset-(--print-spacing) rounded-[inherit] border border-(--print-ink) content-[''];
 	}
 
 	.plate[data-pattern='frames']::after {
-		inset: calc(2 * var(--spacing));
+		inset: calc(2 * var(--print-spacing));
 	}
 
 	.plate[data-pattern='rules'] {
 		background-image: repeating-linear-gradient(
 			0deg,
 			var(--print-ink) 0 1px,
-			transparent 1px var(--spacing)
+			transparent 1px var(--print-spacing)
 		);
 	}
 

@@ -12,25 +12,15 @@
 </svelte:head>
 
 <div class="shell">
-	<div class="page-heading error">
+	<div class="page-heading pb-[clamp(3.5rem,8vw,7rem)]">
 		<h1>{missing ? 'Page not found' : 'Something went wrong'}</h1>
 		<p>
 			{missing
 				? 'We couldn’t find that page.'
 				: (page.error?.message ?? 'Please try again in a moment.')}
 		</p>
-		<a class="text-link" href={resolve('/')}>
+		<a class="text-link mt-4" href={resolve('/')}>
 			<ArrowLeft size={17} strokeWidth={1.8} aria-hidden="true" /> Back to home
 		</a>
 	</div>
 </div>
-
-<style>
-	.error {
-		padding-bottom: clamp(3.5rem, 8vw, 7rem);
-	}
-
-	.text-link {
-		margin-top: 1rem;
-	}
-</style>

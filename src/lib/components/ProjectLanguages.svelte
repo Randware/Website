@@ -7,20 +7,25 @@
 	const percent = new Intl.NumberFormat('en', { style: 'percent', maximumFractionDigits: 1 });
 </script>
 
-<section class="languages paper-panel" aria-labelledby="project-languages">
-	<h2 id="project-languages">Languages</h2>
+<section
+	class="paper-panel p-[clamp(1.125rem,2.5vw,1.625rem)] [&>p]:mt-1.5 [&>p]:text-[0.875rem] [&>p]:text-muted"
+	aria-labelledby="project-languages"
+>
+	<h2 class="text-[1.375rem]" id="project-languages">Languages</h2>
 	{#if languages && total > 0}
 		<p>Share of code bytes on GitHub.</p>
-		<ul>
+		<ul class="mt-[1.125rem] grid gap-3.5">
 			{#each languages as { name, bytes } (name)}
 				{@const share = bytes / total}
 				<li>
-					<div class="language-label">
+					<div class="mb-1 flex justify-between gap-2 text-[0.875rem] wrap-anywhere">
 						<span>{name}</span>
-						<span>{share < 0.001 ? '<0.1%' : percent.format(share)}</span>
+						<span class="text-muted tabular-nums">
+							{share < 0.001 ? '<0.1%' : percent.format(share)}
+						</span>
 					</div>
-					<div class="track" aria-hidden="true">
-						<span style:width="{share * 100}%"></span>
+					<div class="h-1.5 overflow-hidden rounded-xs bg-tint" aria-hidden="true">
+						<span class="block h-full bg-ink" style:width="{share * 100}%"></span>
 					</div>
 				</li>
 			{/each}
@@ -34,52 +39,3 @@
 		</a>
 	{/if}
 </section>
-
-<style>
-	.languages {
-		padding: clamp(1.125rem, 2.5vw, 1.625rem);
-	}
-
-	h2 {
-		font-size: 1.375rem;
-	}
-
-	p {
-		margin-top: 0.375rem;
-		color: var(--muted);
-		font-size: 0.875rem;
-	}
-
-	ul {
-		display: grid;
-		gap: 0.875rem;
-		margin-top: 1.125rem;
-	}
-
-	.language-label {
-		display: flex;
-		justify-content: space-between;
-		gap: 0.5rem;
-		margin-bottom: 0.25rem;
-		font-size: 0.875rem;
-		overflow-wrap: anywhere;
-	}
-
-	.language-label span:last-child {
-		color: var(--muted);
-		font-variant-numeric: tabular-nums;
-	}
-
-	.track {
-		height: 0.375rem;
-		overflow: hidden;
-		border-radius: 0.125rem;
-		background: var(--tint);
-	}
-
-	.track span {
-		display: block;
-		height: 100%;
-		background: var(--ink);
-	}
-</style>

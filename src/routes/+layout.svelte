@@ -138,11 +138,21 @@
 	onscroll={clearTouchPress}
 />
 
-<div class="site" id="page-top" data-intro={intro ? '' : undefined} onanimationend={finishIntro}>
-	<a class="skip-link" href="#main-content">Skip to content</a>
+<div
+	class="site flex min-h-screen flex-col supports-[height:100svh]:min-h-svh"
+	id="page-top"
+	data-intro={intro ? '' : undefined}
+	onanimationend={finishIntro}
+>
+	<a
+		class="fixed top-3 z-20 rounded-paper bg-accent px-4 py-2 text-on-accent left-(--gutter) [transform:translateY(calc(-100%-1rem))] focus:[transform:none]"
+		href="#main-content"
+	>
+		Skip to content
+	</a>
 	<Navbar />
 
-	<main id="main-content" tabindex="-1">
+	<main class="flex-1 focus:outline-none" id="main-content" tabindex="-1">
 		{@render children()}
 	</main>
 
@@ -150,13 +160,6 @@
 </div>
 
 <style>
-	.site {
-		display: flex;
-		min-height: 100vh;
-		min-height: 100svh;
-		flex-direction: column;
-	}
-
 	@media (prefers-reduced-motion: no-preference) {
 		:global(:root[data-page-intro='ready']) .site[data-intro] {
 			animation: page-fade-in 420ms ease-out;
@@ -175,29 +178,5 @@
 		to {
 			opacity: 1;
 		}
-	}
-
-	main {
-		flex: 1;
-	}
-
-	main:focus {
-		outline: none;
-	}
-
-	.skip-link {
-		position: fixed;
-		z-index: 20;
-		top: 0.75rem;
-		left: var(--gutter);
-		padding: 0.5rem 1rem;
-		border-radius: var(--paper-radius);
-		background: var(--accent);
-		color: var(--on-accent);
-		transform: translateY(calc(-100% - 1rem));
-	}
-
-	.skip-link:focus {
-		transform: none;
 	}
 </style>

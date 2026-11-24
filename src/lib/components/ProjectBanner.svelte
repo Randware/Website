@@ -22,14 +22,14 @@
 </script>
 
 <div
-	class="project-print"
+	class="project-print pointer-events-none absolute inset-0 -z-1 overflow-hidden rounded-[inherit] bg-wash [contain:layout_paint]"
 	data-stock={seed % 3}
 	style:--print-step="{6 + ((seed >>> 24) % 5)}px"
 	aria-hidden="true"
 >
 	{#each plates as plate, index (index)}
 		<span
-			class="plate"
+			class="plate absolute left-(--x) top-(--y) aspect-square w-(--size) rounded-[50%] border border-(--print-dark)"
 			data-shape={plate.shape}
 			style:--x="{plate.x}%"
 			style:--y="{plate.y}%"
@@ -41,22 +41,16 @@
 	{/each}
 </div>
 
-<style>
+<style lang="postcss">
+	@reference '../../app.css';
+
 	.project-print {
 		--print-light: color-mix(in srgb, var(--ink) 9%, transparent);
 		--print-mid: color-mix(in srgb, var(--ink) 19%, transparent);
 		--print-dark: color-mix(in srgb, var(--ink) 33%, transparent);
 
-		position: absolute;
-		z-index: -1;
-		inset: 0;
-		overflow: hidden;
-		border-radius: inherit;
-		background-color: var(--wash);
 		background-image: radial-gradient(circle, var(--print-mid) 0.6px, transparent 0.9px);
 		background-size: var(--print-step) var(--print-step);
-		pointer-events: none;
-		contain: layout paint;
 	}
 
 	.project-print[data-stock='1'] {
@@ -72,13 +66,6 @@
 	.plate {
 		--spread: var(--project-plate-spread, 0);
 
-		position: absolute;
-		top: var(--y);
-		left: var(--x);
-		width: var(--size);
-		aspect-ratio: 1;
-		border: 1px solid var(--print-dark);
-		border-radius: 50%;
 		background: repeating-linear-gradient(45deg, var(--print-mid) 0 1px, transparent 1px 5px);
 		transform: translate(
 				calc(-50% + var(--spread-x) * var(--spread)),
@@ -93,11 +80,7 @@
 	}
 
 	.plate[data-shape='1']::before {
-		position: absolute;
-		inset: 0.375rem;
-		border: 1px solid var(--print-mid);
-		border-radius: 0.375rem;
-		content: '';
+		@apply absolute inset-1.5 rounded-md border border-(--print-mid) content-[''];
 	}
 
 	.plate[data-shape='2'] {

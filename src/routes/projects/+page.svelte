@@ -16,15 +16,20 @@
 	/>
 </svelte:head>
 
-<div class="shell projects">
-	<header class="project-header">
-		<div class="page-heading">
+<div class="shell pb-[clamp(3rem,7vw,6rem)]">
+	<header
+		class="flex items-end justify-between gap-x-4 [@media(max-width:45rem)]:flex-col [@media(max-width:45rem)]:items-start"
+	>
+		<div class="page-heading [@media(max-width:45rem)]:pb-2">
 			<h1>Projects</h1>
 			<p>Explore what we’ve made and take a look at the source code.</p>
 		</div>
 
 		{#if data.projects}
-			<a class="text-link" href={githubRepositories}>
+			<a
+				class="text-link mb-[3.4rem] shrink-0 [@media(max-width:45rem)]:mb-6"
+				href={githubRepositories}
+			>
 				<Github size={18} strokeWidth={1.7} aria-hidden="true" /> Randware on GitHub
 				<ArrowUpRight size={15} strokeWidth={1.7} aria-hidden="true" />
 			</a>
@@ -45,45 +50,8 @@
 			{/each}
 		</ul>
 	{:else}
-		<p class="project-note">There are currently no public repositories in the list.</p>
+		<p class="mb-4 text-[0.9375rem] text-muted">
+			There are currently no public repositories in the list.
+		</p>
 	{/if}
 </div>
-
-<style>
-	.projects {
-		padding-bottom: clamp(3rem, 7vw, 6rem);
-	}
-
-	.project-header {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		column-gap: 1rem;
-	}
-
-	.project-header .text-link {
-		margin-bottom: 3.4rem;
-		flex-shrink: 0;
-	}
-
-	.project-note {
-		margin-bottom: 1rem;
-		color: var(--muted);
-		font-size: 0.9375rem;
-	}
-
-	@media (max-width: 45rem) {
-		.project-header {
-			align-items: flex-start;
-			flex-direction: column;
-		}
-
-		.page-heading {
-			padding-bottom: 0.5rem;
-		}
-
-		.project-header .text-link {
-			margin-bottom: 1.5rem;
-		}
-	}
-</style>

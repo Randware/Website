@@ -409,14 +409,15 @@
 		--hero-gap: 4.25rem;
 		--hero-inset: max(var(--gutter), calc((100% - 74rem) / 2));
 		--hero-viewport-height: 100vh;
-		/* Use half the gap a fully centered card would leave under the header,
-		   plus 0.25rem, with the standard hero gap as the minimum. */
-		--hero-extra-gap: max(
+		/* Limit the extra space around the settled card to the desktop spacing
+		   on tall viewports. The opening still uses the full viewport. */
+		--hero-extra-gap: clamp(
 			0px,
 			calc(
 				(var(--hero-viewport-height) - var(--hero-stage-height)) * 0.25 -
 					(var(--hero-top) + var(--header-floating-offset) + var(--hero-gap)) * 0.5 + 0.25rem
-			)
+			),
+			1.75rem
 		);
 		--hero-stage-offset: calc(var(--header-floating-offset) + var(--hero-extra-gap));
 		--hero-easing: cubic-bezier(0.333333, 0.666667, 0.666667, 1);

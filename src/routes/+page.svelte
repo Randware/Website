@@ -389,7 +389,9 @@
 	{#if data.featuredProjects?.length}
 		<ul class="project-grid">
 			{#each data.featuredProjects as project (project.name)}
-				<li><ProjectItem {project} artworkTimestamp={data.artworkTimestamp} /></li>
+				<li>
+					<ProjectItem {project} artworkTimestamp={data.artworkTimestamp} showExternalLinks />
+				</li>
 			{/each}
 		</ul>
 	{:else}

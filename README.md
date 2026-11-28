@@ -59,13 +59,24 @@ This will do the following:
 
 ### GitHub data
 
-Public projects load without a token. The server caches the project list for one hour and project
-READMEs and languages for six hours. It serves the last successful response for up to seven days
-while refreshing in the background, and pauses requests when GitHub reports a rate limit.
+The production server loads its saved GitHub snapshot or fetches one before accepting requests.
+It refreshes the public project list, each project's README and languages, Randware's public member
+list, and the organization and member profiles every 30 minutes, even without visitors. When a
+token is configured, pins and pronouns refresh in the same batch. All pages use the same snapshot,
+which updates when the batch finishes. An open page picks it up on navigation or reload.
 
-The cache lives in `.cache/github`. The deployment script mounts a named Docker volume there so
-the cache survives redeploys. Set `GITHUB_CACHE_DIR` to a writable persistent directory if you run
-the app elsewhere.
+During a refresh the site serves the preceding snapshot. If a GitHub request fails, the server can
+keep its last successful response for up to seven days. Status and local time disappear after one
+hour without newer profile data. GitHub rate-limit pauses apply across the entire refresh.
+
+GitHub makes profile pronouns available to signed-in users. Set `GITHUB_TOKEN` on the website
+server to fetch pronouns through GitHub's authenticated GraphQL API. `docker-deploy.sh` forwards
+the variable from its environment at container startup.
+
+The snapshot lives in `.cache/github`. The deployment script mounts a named Docker volume there
+so the cache survives redeploys. Set `GITHUB_CACHE_DIR` to a writable persistent directory if
+you run the app elsewhere. To reset the cache, stop the server, clear the configured directory,
+then start the server again.
 
 ## Contributing
 

@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { ArrowUp, ArrowUpRight } from 'lucide-svelte';
-	import { organizationLinks } from '#lib/links.js';
+	import { ArrowUp } from 'lucide-svelte';
+	import type { ContactLink } from '#lib/contact.js';
+	import LinkCollection from '../LinkCollection.svelte';
 
+	let { name, links }: { name: string; links: ContactLink[] } = $props();
 	const year = new Date().getUTCFullYear();
 </script>
 
@@ -17,9 +19,9 @@
 						class="w-fit font-serif text-[clamp(1.625rem,3.4vw,2rem)] font-bold leading-[1.2] tracking-[-0.065em]"
 						href={resolve('/')}
 					>
-						Randware
+						{name}
 					</a>
-					<small class="text-[0.8125rem] text-muted">© {year} Randware</small>
+					<small class="text-[0.8125rem] text-muted">© {year} {name}</small>
 				</div>
 				<a
 					class="header-control pressable border-line-strong [--header-control-size:2.75rem] [--press-shadow:var(--paper-edge)] [--press-y:2px]"
@@ -32,33 +34,9 @@
 			</div>
 			<nav
 				class="border-t border-dashed border-line px-(--footer-padding) py-2.5"
-				aria-label="Randware social links"
+				aria-label="{name} social links"
 			>
-				<ul
-					class="flex flex-wrap justify-between gap-x-4 [@media(max-width:44rem)]:grid [@media(max-width:44rem)]:grid-cols-2"
-				>
-					{#each organizationLinks as { name, url, icon: Icon } (url)}
-						<li>
-							<a
-								class="inline-flex min-h-11 items-center gap-1.5 text-[0.875rem] font-medium leading-[1.3] underline-offset-[0.2em] hover:underline [&_svg]:shrink-0"
-								href={url}
-								target="_blank"
-								rel="noopener"
-								aria-label={name}
-								title={name}
-							>
-								<Icon size={18} strokeWidth={1.75} aria-hidden="true" />
-								<span>{name}</span>
-								<ArrowUpRight
-									class="opacity-75 [@media(max-width:24rem)]:hidden"
-									size={12}
-									strokeWidth={1.75}
-									aria-hidden="true"
-								/>
-							</a>
-						</li>
-					{/each}
-				</ul>
+				<LinkCollection {links} label="{name} profiles" footer />
 			</nav>
 		</div>
 	</div>

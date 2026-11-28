@@ -1,13 +1,12 @@
-import { getFeaturedProjects } from '#lib/server/projects.js';
+import { visitArtworkSeed } from '#lib/artwork.js';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ locals }) => {
 	const timestamp = Date.now();
-	const [headline, values] = crypto.getRandomValues(new Uint32Array(2));
-
+	const { featuredProjects } = await locals.githubData();
 	return {
-		headlineArtworkSeed: (timestamp ^ headline) >>> 0,
-		valuesArtworkSeed: (timestamp ^ values) >>> 0,
-		featuredProjects: await getFeaturedProjects()
+		headlineArtworkSeed: visitArtworkSeed(timestamp),
+		valuesArtworkSeed: visitArtworkSeed(timestamp),
+		featuredProjects
 	};
 };

@@ -2,7 +2,7 @@ import { GITHUB_TOKEN } from '$app/env/private';
 import { isExternalLink } from '#lib/external-link.js';
 import { organization, type Project, type ProjectLanguage } from '#lib/projects.js';
 import sanitizeHtml from 'sanitize-html';
-import { cached, githubFetch } from './github-cache.js';
+import { githubFetch, type GitHubReader } from './github-cache.js';
 
 type GitHubRepository = {
 	name: string;
@@ -34,16 +34,12 @@ function githubHeaders() {
 	return headers;
 }
 
-export function getProjects() {
-	return cached('repositories', fetchProjects, 60 * 60 * 1000);
-}
-
-export async function getFeaturedProjects(): Promise<Project[] | null> {
+export async function getProjectIndex(read: GitHubReader) {
 	const [projects, pinnedNames] = await Promise.all([
-		getProjects(),
-		GITHUB_TOKEN ? cached('profile-pins', fetchPinnedNames) : null
+		read('repositories', fetchProjects),
+		GITHUB_TOKEN ? read('profile-pins', fetchPinnedNames) : null
 	]);
-	if (!projects) return null;
+	if (!projects) return { projects, featuredProjects: null };
 
 	const byName = new Map(
 		projects.map((project) => [`${organization}/${project.name}`.toLowerCase(), project])
@@ -53,7 +49,7 @@ export async function getFeaturedProjects(): Promise<Project[] | null> {
 		return project ? [project] : [];
 	});
 
-	return (pinned?.length ? pinned : projects).slice(0, 3);
+	return { projects, featuredProjects: (pinned?.length ? pinned : projects).slice(0, 3) };
 }
 
 async function fetchProjects() {
@@ -136,10 +132,16 @@ async function fetchPinnedNames() {
 	);
 }
 
-export async function getReadme(project: Project, origin: string) {
-	const readme = await cached(`readme:${project.name.toLowerCase()}:${project.branch}`, () =>
-		fetchReadme(project)
-	);
+export async function getProjectDetails(read: GitHubReader, project: Project) {
+	const name = project.name.toLowerCase();
+	const [readme, languages] = await Promise.all([
+		read(`readme:${name}:${project.branch}`, () => fetchReadme(project)),
+		read(`languages:${name}`, () => fetchLanguages(project))
+	]);
+	return { readme, languages };
+}
+
+export function renderReadme(readme: string | null, origin: string) {
 	if (!readme) return null;
 
 	// Apply tab behavior when serving the README so existing snapshots work at any site origin.
@@ -155,10 +157,6 @@ export async function getReadme(project: Project, origin: string) {
 			})
 		}
 	});
-}
-
-export function getLanguages(project: Project) {
-	return cached(`languages:${project.name.toLowerCase()}`, () => fetchLanguages(project));
 }
 
 async function fetchLanguages(project: Project): Promise<ProjectLanguage[]> {

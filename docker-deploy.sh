@@ -31,7 +31,7 @@ docker build -t randware-website .
 
 # Run the new image
 echo "Running the 'randware-website' container..."
-docker run --name randware-website -d -p 3000:3000 \
+docker run --name randware-website -d -p 3000:3000 --env GITHUB_TOKEN \
     -v randware-github-cache:/app/.cache/github randware-website
 
 echo "Script completed successfully."

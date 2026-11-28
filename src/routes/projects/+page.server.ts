@@ -1,4 +1,6 @@
-import { getProjects } from '#lib/server/projects.js';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async () => ({ projects: await getProjects() });
+export const load: PageServerLoad = async ({ locals }) => {
+	const { projects } = await locals.githubData();
+	return { projects };
+};

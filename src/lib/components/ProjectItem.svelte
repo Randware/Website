@@ -4,7 +4,7 @@
 	import { ArrowRight, ArrowUpRight, Star } from 'lucide-svelte';
 	import { isExternalLink } from '#lib/external-link.js';
 	import type { Project } from '#lib/projects.js';
-	import ProjectBanner from './ProjectBanner.svelte';
+	import PaperBanner from './PaperBanner.svelte';
 	import ProjectGlyph from './ProjectGlyph.svelte';
 
 	let {
@@ -21,12 +21,12 @@
 </script>
 
 <article
-	class="project paper-panel pressable relative flex h-full flex-col [--project-gutter:clamp(1rem,2vw,1.5rem)] hover:border-accent focus-within:border-accent"
+	class="project paper-panel pressable relative flex h-full flex-col [--card-gutter:clamp(1rem,2vw,1.5rem)] hover:border-accent focus-within:border-accent"
 >
 	<div
-		class="relative isolate flex items-start justify-between gap-4 rounded-t-paper-inner border-b border-line px-(--project-gutter) py-3.5 [--glyph-size:3.75rem]"
+		class="paper-card-banner flex items-start justify-between gap-4 py-3.5 [--glyph-size:3.75rem]"
 	>
-		<ProjectBanner name={project.name} {artworkTimestamp} />
+		<PaperBanner name={project.name} visitSeed={artworkTimestamp} animated />
 		<ProjectGlyph name={project.name} />
 		<span
 			class="project-arrow grid size-[2.125rem] shrink-0 place-items-center rounded-paper-inner border border-line-strong bg-card text-ink"
@@ -36,7 +36,7 @@
 		</span>
 	</div>
 
-	<div class="flex-1 px-(--project-gutter) pb-[1.125rem] pt-4 wrap-anywhere">
+	<div class="flex-1 px-(--card-gutter) pb-[1.125rem] pt-4 wrap-anywhere">
 		<svelte:element this={heading} class="text-[clamp(1.375rem,2.45vw,1.75rem)]">
 			<a
 				class={[
@@ -53,7 +53,7 @@
 	</div>
 
 	<div
-		class="flex min-h-[3.25rem] min-w-0 flex-wrap items-center gap-x-3.5 border-t border-dashed border-line px-(--project-gutter) py-0.5 text-[0.875rem] text-muted wrap-anywhere"
+		class="paper-card-footer flex min-h-[3.25rem] min-w-0 flex-wrap items-center gap-x-3.5 py-0.5 text-[0.875rem] text-muted wrap-anywhere"
 	>
 		<div class="flex min-w-0 flex-[1_1_4rem] flex-wrap items-center gap-x-3.5">
 			{#if project.language}<span>{project.language}</span>{/if}

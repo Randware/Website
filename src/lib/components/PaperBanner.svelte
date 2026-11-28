@@ -1,8 +1,12 @@
 <script lang="ts">
-	import { projectSeed } from '#lib/projects.js';
+	import { bannerSeed } from '#lib/artwork.js';
 
-	let { name, artworkTimestamp }: { name: string; artworkTimestamp: number } = $props();
-	const seed = $derived(projectSeed(name, artworkTimestamp));
+	let {
+		name,
+		visitSeed,
+		animated = false
+	}: { name: string; visitSeed: number; animated?: boolean } = $props();
+	const seed = $derived(bannerSeed(name, visitSeed));
 	const plates = $derived(
 		Array.from({ length: 3 }, (_, index) => {
 			const bits = seed >>> (index * 8);
@@ -24,6 +28,8 @@
 <div
 	class="project-print pointer-events-none absolute inset-0 -z-1 overflow-hidden rounded-[inherit] bg-wash [contain:layout_paint]"
 	data-stock={seed % 3}
+	data-seed={seed}
+	data-animated={animated ? '' : undefined}
 	style:--print-step="{6 + ((seed >>> 24) % 5)}px"
 	aria-hidden="true"
 >
@@ -64,7 +70,7 @@
 	}
 
 	.plate {
-		--spread: var(--project-plate-spread, 0);
+		--spread: 0;
 
 		background: repeating-linear-gradient(45deg, var(--print-mid) 0 1px, transparent 1px 5px);
 		transform: translate(
@@ -93,7 +99,8 @@
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
-		.plate {
+		.project-print[data-animated] .plate {
+			--spread: var(--project-plate-spread, 0);
 			transition: transform 440ms cubic-bezier(0.19, 0.75, 0.24, 1);
 		}
 	}

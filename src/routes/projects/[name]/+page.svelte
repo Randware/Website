@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { ArrowLeft, ArrowUpRight, Star } from 'lucide-svelte';
-	import ProjectBanner from '#lib/components/ProjectBanner.svelte';
+	import PaperBanner from '#lib/components/PaperBanner.svelte';
 	import ProjectFallback from '#lib/components/ProjectFallback.svelte';
 	import ProjectGlyph from '#lib/components/ProjectGlyph.svelte';
 	import ProjectLanguages from '#lib/components/ProjectLanguages.svelte';
@@ -41,7 +41,7 @@
 			<div
 				class="detail-banner relative isolate grid gap-[clamp(0.75rem,2.5vw,1.75rem)] rounded-t-paper-inner border-b border-line px-(--summary-gutter) pb-(--summary-gutter) pt-[clamp(0.375rem,1vw,0.875rem)]"
 			>
-				<ProjectBanner name={project.name} artworkTimestamp={data.artworkTimestamp} />
+				<PaperBanner name={project.name} visitSeed={data.artworkTimestamp} />
 				{@render backToProjects()}
 				<div
 					class="flex items-center gap-[clamp(0.875rem,2.5vw,1.75rem)] [--glyph-size:clamp(2.75rem,7vw,4.75rem)] max-inline-[66%] [@media(max-width:44rem)]:max-inline-full"

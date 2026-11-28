@@ -8,9 +8,10 @@
 	import headingFont from '@fontsource/merriweather/files/merriweather-latin-700-normal.woff2?url';
 	import mediumFont from '@fontsource/rubik/files/rubik-latin-500-normal.woff2?url';
 	import boldFont from '@fontsource/rubik/files/rubik-latin-600-normal.woff2?url';
+	import type { LayoutProps } from './$types';
 	import '../app.css';
 
-	let { children } = $props();
+	let { children, data }: LayoutProps = $props();
 	let intro = $state(true);
 	let introFrame = 0;
 	let pressed:
@@ -156,7 +157,7 @@
 		{@render children()}
 	</main>
 
-	<Footer />
+	<Footer name={data.organizationProfile.name} links={data.organizationLinks} />
 </div>
 
 <style>

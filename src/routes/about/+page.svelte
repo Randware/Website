@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import ProfileAvatar from '#lib/components/ProfileAvatar.svelte';
 	import { ArrowRight } from 'lucide-svelte';
-	import { members } from '#lib/links.js';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
 
 	const storyLayout =
 		'grid grid-cols-[minmax(11rem,0.7fr)_minmax(0,1.3fr)] gap-x-10 gap-y-3 border-t border-line py-[clamp(1.75rem,4.5vw,3.25rem)] [@media(max-width:38rem)]:grid-cols-1';
@@ -29,17 +32,15 @@
 			class="paper-panel pressable flex w-fit items-center gap-4 bg-wash px-[1.125rem] py-4 hover:border-accent [@media(max-width:49rem)]:mb-8"
 			href={resolve('/contact#members')}
 		>
-			<span class="flex shrink-0 pl-1.5">
-				{#each members as member (member.name)}
-					<img
-						class="-ml-1.5 size-[2.875rem] rounded-paper border-2 border-wash object-cover"
-						src={member.avatar}
-						alt=""
-						width="72"
-						height="72"
-					/>
-				{/each}
-			</span>
+			{#if data.teamPreview.length}
+				<span
+					class="flex shrink-0 -space-x-3.5 [--avatar-border-width:2px] [--avatar-gap:2px] [--avatar-size:2.875rem] [--avatar-stock:var(--wash)]"
+				>
+					{#each data.teamPreview as member (member.login)}
+						<ProfileAvatar src={member.avatar} />
+					{/each}
+				</span>
+			{/if}
 			<span class="flex items-center gap-2.5 text-[0.9375rem] font-medium text-accent">
 				Meet the team <ArrowRight size={16} strokeWidth={1.8} aria-hidden="true" />
 			</span>
